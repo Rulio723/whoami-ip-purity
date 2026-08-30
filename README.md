@@ -1,29 +1,142 @@
-# WhoAmI 网络与设备指纹检测
+# WhoAmI — npm + MaxMind 版
 
-一个部署在 Cloudflare 边缘运行时上的 `whoami.moe` 高保真实现：服务端首屏直接输出访问者公网 IP、Cloudflare 边缘地理与 ASN 信息，浏览器端使用 FingerprintJS 5.2.0 计算设备指纹。
+与 `whoami.moe` 页面保持一致的 Node.js 服务。Cloudflare 负责 CDN、TLS 和真实访客 IP 转发，Node/Express 在源站服务端读取本地 MaxMind MMDB 并渲染完整 HTML，浏览器端使用 htmx 4.0.0、hx-live 和 FingerprintJS 5.2.0。
+
+## 与源站架构的关系
+
+截至 2026-08-30，从源站公开响应可以确认：Cloudflare 位于站点前端，页面是服务端输出的 HTML，浏览器资源包含 htmx 4.0.0、hx-live 和 FingerprintJS 5.2.0。本项目已经对齐这些可观察部分，并实现相同的 `Accept` 分流、真实 IP 展示、MaxMind 字段和浏览器指纹。
+
+源站没有公开服务端源码，因此无法从外部证明它内部也使用 Node.js、Express 或同一种 MMDB 加载方式。本项目属于“公开行为和可观察前端栈一致、后端实现可独立部署”，不是声称拿到了源站私有后端源码。
 
 ## 架构
 
-- **Cloudflare Worker 边缘 SSR**：单次请求生成完整 HTML。
-- **真实访问者 IP**：优先读取 Cloudflare 注入且不可由公网客户端伪造的 `CF-Connecting-IP`，其次兼容反向代理头。
-- **边缘地理信息**：读取 `request.cf` 的城市、地区、国家、时区、ASN 和网络服务商。
-- **浏览器指纹**：锁定 `@fingerprintjs/fingerprintjs@5.2.0`，与目标站当前前端版本一致。
-- **速度**：HTML、CSS、字体、图标和指纹库均由同一个 Worker/Cloudflare CDN 提供；无首屏第三方 API 请求。
-- **命令行模式**：`curl https://你的域名` 只返回 IP 和换行。
-- **隐私**：无数据库、无日志写入、页面响应 `Cache-Control: no-store`。
-
-## 本地验证
-
-```bash
-npm install
-npm test
+```text
+Browser / curl
+      │
+      ▼
+Cloudflare CDN / Tunnel
+      │ CF-Connecting-IP
+      ▼
+Node.js 22 + Express 5
+      ├── GeoLite2-City.mmdb
+      ├── GeoLite2-ASN.mmdb
+      ├── 服务端 HTML 渲染
+      └── Vite 打包并生成带内容哈希的 htmx/hx-live + FingerprintJS 资源
 ```
 
-构建产物为 `dist/server/index.js`，导出 Cloudflare Worker 兼容的 `fetch(request, env, ctx)`。
+## MaxMind 数据
 
-## 关键文件
+默认生产依赖中包含 GeoLite2 City 和 ASN MMDB，Node 服务通过 MaxMind 官方 `@maxmind/geoip2-node` Reader 查询。也可以通过环境变量换成你自己的 GeoLite2/GeoIP2 数据库：
 
-- `worker/index.js`：边缘 SSR、真实 IP、UA 解析、API 与静态资源响应。
-- `client.js`：FingerprintJS 与浏览器时区填充。
-- `assets/main.css`：目标站布局与响应式视觉。
-- `tests/worker.test.mjs`：真实 IP、HTML、指纹挂载点和 JSON API 测试。
+```dotenv
+MAXMIND_CITY_DB=/app/databases/GeoLite2-City.mmdb
+MAXMIND_ASN_DB=/app/databases/GeoLite2-ASN.mmdb
+```
+
+示例 IP `216.40.85.151` 的本地 MMDB 实测结果：
+
+```text
+城市      洛杉矶
+邮编      90060
+地区      加州
+国家      美国
+时区      America/Los_Angeles
+网络      216.40.84.0/22
+ASN       AS1054 ZONT-LLC
+服务商    Zont LLC
+```
+
+## 本地运行
+
+```powershell
+cd D:\Codex\IP
+npm ci
+npm test
+npm start
+```
+
+打开 `http://127.0.0.1:3000`。模拟参考截图 IP：
+
+```powershell
+$env:DEV_IP_OVERRIDE='216.40.85.151'
+npm start
+```
+
+接口：
+
+```text
+GET /             浏览器返回 HTML；curl 返回纯文本 IP
+GET /api/info     MaxMind 查询结果 JSON
+GET /healthz      健康状态
+```
+
+## Docker + Cloudflare Tunnel 部署
+
+1. 在 Cloudflare Zero Trust 创建 Tunnel，把公网主机名指向：
+
+   ```text
+   http://whoami:3000
+   ```
+
+2. 创建 `.env`：
+
+   ```dotenv
+   CLOUDFLARE_TUNNEL_TOKEN=你的Tunnel令牌
+   MAXMIND_CITY_DB=
+   MAXMIND_ASN_DB=
+   ```
+
+3. 部署：
+
+   ```bash
+   docker compose up -d --build
+   docker compose ps
+   curl http://127.0.0.1:3000/healthz
+   ```
+
+应用端口只绑定 `127.0.0.1`，公网流量通过 Cloudflare Tunnel 进入，避免客户端绕开 Cloudflare 伪造 `CF-Connecting-IP`。
+
+## 使用 MaxMind 官方账户更新数据库
+
+创建 MaxMind GeoLite2 账户和 License Key，然后运行：
+
+```powershell
+$env:MAXMIND_ACCOUNT_ID='你的账户ID'
+$env:MAXMIND_LICENSE_KEY='你的License Key'
+npm run maxmind:update
+```
+
+下载结果：
+
+```text
+databases/GeoLite2-City.mmdb
+databases/GeoLite2-ASN.mmdb
+```
+
+随后在 `.env` 中加入：
+
+```dotenv
+MAXMIND_CITY_DB=/app/databases/GeoLite2-City.mmdb
+MAXMIND_ASN_DB=/app/databases/GeoLite2-ASN.mmdb
+```
+
+再执行：
+
+```bash
+docker compose up -d --build
+```
+
+不要把 MaxMind 账户 ID、License Key 或商业数据库提交到 Git。
+
+## 关键目录
+
+```text
+src/app.js          Express 路由和响应头
+src/ip.js           CF-Connecting-IP 与 UA 解析
+src/maxmind.js      City/ASN MMDB 加载与查询
+src/template.js     与源站一致的服务端 HTML
+client.js           htmx/hx-live + FingerprintJS
+scripts/build.mjs   浏览器资源构建与内容哈希缓存
+Dockerfile          Node 22 生产镜像
+compose.yaml        Node 服务 + Cloudflare Tunnel
+```

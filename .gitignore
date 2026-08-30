@@ -1,4 +1,7 @@
 node_modules/
+public/
+databases/
+.env
 dist/
 research/original.html
 research/original.js
@@ -6,4 +9,10 @@ research/site-headers.txt
 reference.png
 modified.png
 ROLLBACK_TEST.js
+ROLLBACK_TEST/
+.baseline-test-*/
+.cdp_target
+npm-*.png
+research/whoami-live-*
+research/maxmind-test-*
 *.tgz

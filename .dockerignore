@@ -1,0 +1,9 @@
+.git
+node_modules
+public
+databases
+*.tgz
+reference.png
+modified*.png
+research
+ROLLBACK_TEST.js

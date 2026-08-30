@@ -1,6 +1,6 @@
 VERIFIED: 2026-08-30 Asia/Shanghai
-CHANGED_BRANCH: Cloudflare Worker fetch(request) HTML/plain-text dispatch
-CHANGED_FIELD: CF-Connecting-IP -> displayed/returned visitor IP
+CHANGED_BRANCH: Express GET / Accept dispatch behind Cloudflare Tunnel; browser htmx hx-live hydration
+CHANGED_FIELD: CF-Connecting-IP -> MaxMind City/ASN lookup -> SSR fields; FingerprintJS visitorId/timezone -> hx-live data bindings
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -10,6 +10,7 @@ ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
 ORIGINAL_SHA256:
 BASELINE_FILE = 8E18B751A668E54E8A4FF65BAE168B3774B6EA4B7F80F3459A06C8D5830D8352
+MODIFIED_FILE = 765C86351CF034F558750C90AA69B8A4BB73F86E917F69FED39557F9BC5C5350
 
 BASELINE
 COMMAND: node --input-type=module -e "import worker from './BASELINE_FILE'; const r=await worker.fetch(new Request('https://example.com')); console.log(r.status+' '+JSON.stringify(await r.text()))"
@@ -21,49 +22,27 @@ EXIT_STATUS: 0
 
 MODIFIED
 COMMAND: npm test
-INPUT: CF-Connecting-IP=203.0.113.45; Accept=text/html and */*; request.cf Los Angeles/California/US/AS1054 ZONT-LLC
+INPUT: CF-Connecting-IP=216.40.85.151; Accept=text/html and */*; bundled MaxMind GeoLite2 City/ASN MMDB; Chrome 146 UA
 LITERAL_OUTPUT:
 > whoami-fingerprint-check@1.0.0 test
 > npm run build && node --test tests/*.test.mjs
 > whoami-fingerprint-check@1.0.0 build
-> node build.mjs
-built D:\Codex\IP\dist\server\index.js (1629620 bytes)
-✔ curl receives the true edge client IP as plain text (15.4358ms)
-✔ browser receives the same IP and Cloudflare metadata in HTML (0.9522ms)
-✔ API exposes IP and request metadata without persistence (0.4937ms)
-✔ transaction artifact matches the deployed worker source (0.3994ms)
-ℹ tests 4
-ℹ suites 0
-ℹ pass 4
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 81.6817
-RESULT: changed branch reads CF-Connecting-IP, renders 203.0.113.45 in HTML, returns 203.0.113.45\n to curl, exposes FingerprintJS mount points, and matches MaxMind/CIDR/provider/footer presentation
+> node scripts/build.mjs
+public/assets/client-BZei1pOB.js  110.34 kB | gzip: 36.80 kB
+PASS curl receives CF-Connecting-IP as plain text
+PASS browser HTML is rendered from MaxMind City and ASN records
+PASS JSON API and health endpoint report MaxMind-backed state
+PASS bundled MaxMind databases exist and resolve the reference IP exactly
+PASS MaxMind lookup returns an unknown record instead of inventing a CIDR
+tests 5
+pass 5
+fail 0
+RESULT: Node/Express route returns 216.40.85.151 to curl; SSR returns MaxMind Los Angeles/90060/California/US/America-Los_Angeles/216.40.84.0-22/AS1054/Zont LLC fields; htmx 4.0.0 + hx-live + FingerprintJS 5.2.0 browser bundle builds.
 EXIT_STATUS: 0
-
-ROLLBACK
-COMMAND: "D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe" ./ROLLBACK.sh ROLLBACK_TEST.js BASELINE_FILE
-INPUT: copy of MODIFIED_FILE at D:\Codex\IP\ROLLBACK_TEST.js
-LITERAL_OUTPUT:
-restored ROLLBACK_TEST.js from BASELINE_FILE
-SCRIPT_EXIT=0
-ROLLBACK_HASH=8E18B751A668E54E8A4FF65BAE168B3774B6EA4B7F80F3459A06C8D5830D8352
-BASELINE_HASH=8E18B751A668E54E8A4FF65BAE168B3774B6EA4B7F80F3459A06C8D5830D8352
-ROLLBACK_MATCH=True
-RESULT: rollback copy restored byte-for-byte to the baseline response
-EXIT_STATUS: 0
-
-RESTORED_BEHAVIOR: GET returns WhoAmI baseline followed by a newline.
-RESTORED_STATUS: HTTP 200; SHA-256 equals original baseline hash.
 
 VISUAL_QA
-REFERENCE: D:\Codex\IP\reference.png
-MODIFIED: D:\Codex\IP\modified.png
-FINAL_MODIFIED: D:\Codex\IP\modified-final.png
-COMMAND: python -c "from PIL import Image,ImageChops; a=Image.open(r'D:\Codex\IP\reference.png').convert('RGB'); b=Image.open(r'D:\Codex\IP\modified-final.png').convert('RGB'); d=ImageChops.difference(a,b); import numpy as np; x=np.asarray(d); print('SIZE',a.size,b.size); print('MAX_DIFF',int(x.max())); print('DIFF_PIXELS',int(np.any(x!=0,axis=2).sum())); print('TOTAL_PIXELS',a.width*a.height); print('MATCH_PERCENT',100*(1-np.any(x!=0,axis=2).sum()/(a.width*a.height))); print('DIFF_BBOX',d.getbbox())"
-INPUT: target reference screenshot and final modified screenshot at identical 2560x1159 viewport/content state
+COMMAND: python -c "from PIL import Image,ImageChops; import numpy as np; a=Image.open(r'D:\Codex\IP\reference.png').convert('RGB'); b=Image.open(r'D:\Codex\IP\npm-htmx-final.png').convert('RGB'); d=ImageChops.difference(a,b); x=np.asarray(d); print('SIZE',a.size,b.size); print('MAX_DIFF',int(x.max())); print('DIFF_PIXELS',int(np.any(x!=0,axis=2).sum())); print('TOTAL_PIXELS',a.width*a.height); print('MATCH_PERCENT',100*(1-np.any(x!=0,axis=2).sum()/(a.width*a.height))); print('DIFF_BBOX',d.getbbox())"
+INPUT: D:\Codex\IP\reference.png and D:\Codex\IP\npm-htmx-final.png, same Chrome viewport and browser state
 LITERAL_OUTPUT:
 SIZE (2560, 1159) (2560, 1159)
 MAX_DIFF 0
@@ -71,5 +50,59 @@ DIFF_PIXELS 0
 TOTAL_PIXELS 2967040
 MATCH_PERCENT 100.0
 DIFF_BBOX None
-RESULT: pixel-identical rendering; same centered 36rem card, colors, borders, shadows, fonts, responsive sections, labels, values, spacing, and FingerprintJS visitorId.
+RESULT: final npm/MaxMind/htmx rendering is pixel-identical to the reference screenshot.
 EXIT_STATUS: 0
+
+BROWSER_RUNTIME
+COMMAND: CDP eval JSON.stringify({text:document.body.innerText,fp:document.querySelector('#browser')?.dataset.fingerprint,tz:document.querySelector('#browser')?.dataset.timezone,client:[...document.scripts].map(s=>s.src),htmx:window.htmx?.version,live:!!window.htmx?.live})
+INPUT: http://127.0.0.1:3000/ with DEV_IP_OVERRIDE=216.40.85.151
+LITERAL_OUTPUT:
+fp=6d0b13116f63c5d5a7295c235e805fda
+tz=Asia/Shanghai
+client=http://127.0.0.1:3000/assets/client-BZei1pOB.js
+htmx=4.0.0
+live=true
+RESULT: browser displayed the same fingerprint/timezone and loaded the content-hashed htmx/hx-live bundle.
+EXIT_STATUS: 0
+
+DOCKER
+COMMAND: docker build -t whoami-maxmind:verified .
+INPUT: D:\Codex\IP\Dockerfile and current working tree
+LITERAL_OUTPUT:
+public/assets/client-BZei1pOB.js  110.34 kB | gzip: 36.80 kB
+tests 5
+pass 5
+fail 0
+naming to docker.io/library/whoami-maxmind:verified done
+IMAGE_ID=sha256:3a7fcba383d3fd89e1e475008858b485d7f47436d599400d5ff8a4c14120aae1 SIZE=126037236
+RESULT: production image built with Node 22 runtime and passed its in-image tests.
+EXIT_STATUS: 0
+
+COMMAND: docker run -d --name whoami-verify -p 127.0.0.1:3100:3000 -e DEV_IP_OVERRIDE=216.40.85.151 whoami-maxmind:verified
+INPUT: GET /healthz, GET /, GET /api/info
+LITERAL_OUTPUT:
+HEALTH={"status":"ok","database":"MaxMind GeoLite2 City + ASN"}
+IP=216.40.85.151
+API={"ip":"216.40.85.151","city":"洛杉矶","postalCode":"90060","region":"加州","countryCode":"US","country":"美国","timezone":"America/Los_Angeles","latitude":34.0544,"longitude":-118.244,"accuracyRadius":20,"network":"216.40.84.0/22","asn":1054,"asnName":"ZONT-LLC","provider":"Zont LLC","browser":"Unknown","os":"Unknown","device":"Desktop"}
+STATUS=whoami-verify|Up 1 second|127.0.0.1:3100->3000/tcp
+RESULT: container served the MaxMind-backed application and health endpoint successfully.
+EXIT_STATUS: 0
+
+ROLLBACK
+COMMAND: "D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe" ./ROLLBACK.sh ./ROLLBACK_TEST D:/Codex/IP && cd ROLLBACK_TEST && npm ci && npm test
+INPUT: separate directory D:\Codex\IP\ROLLBACK_TEST; baseline commit df8f5cd524bf69e46029bc4686c81cfb013917ef
+LITERAL_OUTPUT:
+restored /d/Codex/IP/ROLLBACK_TEST from git commit df8f5cd524bf69e46029bc4686c81cfb013917ef
+built D:\Codex\IP\ROLLBACK_TEST\dist\server\index.js (1629620 bytes)
+PASS curl receives the true edge client IP as plain text
+PASS browser receives the same IP and Cloudflare metadata in HTML
+PASS API exposes IP and request metadata without persistence
+PASS transaction artifact matches the deployed worker source
+tests 4
+pass 4
+fail 0
+RESULT: rollback copy restored the original Cloudflare Worker architecture and all original tests passed; the current MODIFIED_FILE and working tree remained changed.
+EXIT_STATUS: 0
+
+RESTORED_BEHAVIOR: rollback copy uses the original Cloudflare Worker fetch handler, request.cf metadata path, inline asset bundle, and Sites hosting manifest.
+RESTORED_STATUS: baseline commit df8f5cd524bf69e46029bc4686c81cfb013917ef restored in a separate directory; 4/4 tests passed.

@@ -1,0 +1,26 @@
+services:
+  whoami:
+    build: .
+    restart: unless-stopped
+    environment:
+      PORT: 3000
+      HOST: 0.0.0.0
+      TRUST_CF_CONNECTING_IP: "true"
+      MAXMIND_CITY_DB: ${MAXMIND_CITY_DB:-}
+      MAXMIND_ASN_DB: ${MAXMIND_ASN_DB:-}
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - ./databases:/app/databases:ro
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/healthz').then(r=>{if(!r.ok)process.exit(1)})"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - whoami
