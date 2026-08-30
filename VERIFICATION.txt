@@ -21,18 +21,25 @@ EXIT_STATUS: 0
 
 MODIFIED
 COMMAND: npm test
-INPUT: CF-Connecting-IP=203.0.113.45; Accept=text/html and */*; request.cf Los Angeles/California/US/AS64500
+INPUT: CF-Connecting-IP=203.0.113.45; Accept=text/html and */*; request.cf Los Angeles/California/US/AS1054 ZONT-LLC
 LITERAL_OUTPUT:
 > whoami-fingerprint-check@1.0.0 test
 > npm run build && node --test tests/*.test.mjs
 > whoami-fingerprint-check@1.0.0 build
 > node build.mjs
 built D:\Codex\IP\dist\server\index.js (1629620 bytes)
-✔ curl receives the true edge client IP as plain text
-✔ browser receives the same IP and Cloudflare metadata in HTML
-✔ API exposes IP and request metadata without persistence
-✔ transaction artifact matches the deployed worker source
-tests 4; pass 4; fail 0
+✔ curl receives the true edge client IP as plain text (15.4358ms)
+✔ browser receives the same IP and Cloudflare metadata in HTML (0.9522ms)
+✔ API exposes IP and request metadata without persistence (0.4937ms)
+✔ transaction artifact matches the deployed worker source (0.3994ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 4
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 81.6817
 RESULT: changed branch reads CF-Connecting-IP, renders 203.0.113.45 in HTML, returns 203.0.113.45\n to curl, exposes FingerprintJS mount points, and matches MaxMind/CIDR/provider/footer presentation
 EXIT_STATUS: 0
 
