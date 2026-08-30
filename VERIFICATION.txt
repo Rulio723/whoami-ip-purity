@@ -27,13 +27,13 @@ LITERAL_OUTPUT:
 > npm run build && node --test tests/*.test.mjs
 > whoami-fingerprint-check@1.0.0 build
 > node build.mjs
-built D:\Codex\IP\dist\server\index.js (1629282 bytes)
+built D:\Codex\IP\dist\server\index.js (1629620 bytes)
 ✔ curl receives the true edge client IP as plain text
 ✔ browser receives the same IP and Cloudflare metadata in HTML
 ✔ API exposes IP and request metadata without persistence
 ✔ transaction artifact matches the deployed worker source
 tests 4; pass 4; fail 0
-RESULT: changed branch reads CF-Connecting-IP, renders 203.0.113.45 in HTML, returns 203.0.113.45\n to curl, and exposes FingerprintJS mount points
+RESULT: changed branch reads CF-Connecting-IP, renders 203.0.113.45 in HTML, returns 203.0.113.45\n to curl, exposes FingerprintJS mount points, and matches MaxMind/CIDR/provider/footer presentation
 EXIT_STATUS: 0
 
 ROLLBACK
@@ -54,4 +54,15 @@ RESTORED_STATUS: HTTP 200; SHA-256 equals original baseline hash.
 VISUAL_QA
 REFERENCE: D:\Codex\IP\reference.png
 MODIFIED: D:\Codex\IP\modified.png
-RESULT: same centered 36rem card, colors, borders, shadows, fonts, responsive sections, labels, spacing, and FingerprintJS visitorId.
+FINAL_MODIFIED: D:\Codex\IP\modified-final.png
+COMMAND: python -c "from PIL import Image,ImageChops; a=Image.open(r'D:\Codex\IP\reference.png').convert('RGB'); b=Image.open(r'D:\Codex\IP\modified-final.png').convert('RGB'); d=ImageChops.difference(a,b); import numpy as np; x=np.asarray(d); print('SIZE',a.size,b.size); print('MAX_DIFF',int(x.max())); print('DIFF_PIXELS',int(np.any(x!=0,axis=2).sum())); print('TOTAL_PIXELS',a.width*a.height); print('MATCH_PERCENT',100*(1-np.any(x!=0,axis=2).sum()/(a.width*a.height))); print('DIFF_BBOX',d.getbbox())"
+INPUT: target reference screenshot and final modified screenshot at identical 2560x1159 viewport/content state
+LITERAL_OUTPUT:
+SIZE (2560, 1159) (2560, 1159)
+MAX_DIFF 0
+DIFF_PIXELS 0
+TOTAL_PIXELS 2967040
+MATCH_PERCENT 100.0
+DIFF_BBOX None
+RESULT: pixel-identical rendering; same centered 36rem card, colors, borders, shadows, fonts, responsive sections, labels, values, spacing, and FingerprintJS visitorId.
+EXIT_STATUS: 0

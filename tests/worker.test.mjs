@@ -27,14 +27,18 @@ test('browser receives the same IP and Cloudflare metadata in HTML', async () =>
     }
   }, {
     city: 'Los Angeles', postalCode: '90060', region: 'California', country: 'US',
-    timezone: 'America/Los_Angeles', asn: 64500, asOrganization: 'Example Network',
+    timezone: 'America/Los_Angeles', asn: 1054, asOrganization: 'ZONT-LLC',
     latitude: '34.0544', longitude: '-118.2440'
   }));
   const html = await response.text();
   assert.equal(response.status, 200);
   assert.match(html, /203\.0\.113\.45/);
   assert.match(html, /洛杉矶/);
-  assert.match(html, /AS64500 Example Network/);
+  assert.match(html, /AS1054 ZONT-LLC/);
+  assert.match(html, /203\.0\.112\.0\/22/);
+  assert.match(html, /MaxMind/);
+  assert.match(html, />Zont LLC</);
+  assert.match(html, /curl whoami\.moe/);
   assert.match(html, /Chrome 146/);
   assert.match(html, /id="fp-full"/);
 });
