@@ -1,0 +1,57 @@
+VERIFIED: 2026-08-30 Asia/Shanghai
+CHANGED_BRANCH: Cloudflare Worker fetch(request) HTML/plain-text dispatch
+CHANGED_FIELD: CF-Connecting-IP -> displayed/returned visitor IP
+
+ARTIFACTS:
+MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
+DIFF_FILE: D:\Codex\IP\DIFF_FILE
+VERIFICATION.txt: D:\Codex\IP\VERIFICATION.txt
+ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
+
+ORIGINAL_SHA256:
+BASELINE_FILE = 8E18B751A668E54E8A4FF65BAE168B3774B6EA4B7F80F3459A06C8D5830D8352
+
+BASELINE
+COMMAND: node --input-type=module -e "import worker from './BASELINE_FILE'; const r=await worker.fetch(new Request('https://example.com')); console.log(r.status+' '+JSON.stringify(await r.text()))"
+INPUT: GET https://example.com
+LITERAL_OUTPUT:
+200 "WhoAmI baseline\n"
+RESULT: baseline placeholder response observed
+EXIT_STATUS: 0
+
+MODIFIED
+COMMAND: npm test
+INPUT: CF-Connecting-IP=203.0.113.45; Accept=text/html and */*; request.cf Los Angeles/California/US/AS64500
+LITERAL_OUTPUT:
+> whoami-fingerprint-check@1.0.0 test
+> npm run build && node --test tests/*.test.mjs
+> whoami-fingerprint-check@1.0.0 build
+> node build.mjs
+built D:\Codex\IP\dist\server\index.js (1629282 bytes)
+✔ curl receives the true edge client IP as plain text
+✔ browser receives the same IP and Cloudflare metadata in HTML
+✔ API exposes IP and request metadata without persistence
+✔ transaction artifact matches the deployed worker source
+tests 4; pass 4; fail 0
+RESULT: changed branch reads CF-Connecting-IP, renders 203.0.113.45 in HTML, returns 203.0.113.45\n to curl, and exposes FingerprintJS mount points
+EXIT_STATUS: 0
+
+ROLLBACK
+COMMAND: "D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe" ./ROLLBACK.sh ROLLBACK_TEST.js BASELINE_FILE
+INPUT: copy of MODIFIED_FILE at D:\Codex\IP\ROLLBACK_TEST.js
+LITERAL_OUTPUT:
+restored ROLLBACK_TEST.js from BASELINE_FILE
+SCRIPT_EXIT=0
+ROLLBACK_HASH=8E18B751A668E54E8A4FF65BAE168B3774B6EA4B7F80F3459A06C8D5830D8352
+BASELINE_HASH=8E18B751A668E54E8A4FF65BAE168B3774B6EA4B7F80F3459A06C8D5830D8352
+ROLLBACK_MATCH=True
+RESULT: rollback copy restored byte-for-byte to the baseline response
+EXIT_STATUS: 0
+
+RESTORED_BEHAVIOR: GET returns WhoAmI baseline followed by a newline.
+RESTORED_STATUS: HTTP 200; SHA-256 equals original baseline hash.
+
+VISUAL_QA
+REFERENCE: D:\Codex\IP\reference.png
+MODIFIED: D:\Codex\IP\modified.png
+RESULT: same centered 36rem card, colors, borders, shadows, fonts, responsive sections, labels, spacing, and FingerprintJS visitorId.

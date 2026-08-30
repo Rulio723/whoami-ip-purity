@@ -1,0 +1,9 @@
+node_modules/
+dist/
+research/original.html
+research/original.js
+research/site-headers.txt
+reference.png
+modified.png
+ROLLBACK_TEST.js
+*.tgz
