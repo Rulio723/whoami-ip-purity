@@ -4,7 +4,11 @@
 
 ## 与源站架构的关系
 
-截至 2026-08-30，从源站公开响应可以确认：Cloudflare 位于站点前端，页面是服务端输出的 HTML，浏览器资源包含 htmx 4.0.0、hx-live 和 FingerprintJS 5.2.0。本项目已经对齐这些可观察部分，并实现相同的 `Accept` 分流、真实 IP 展示、MaxMind 字段和浏览器指纹。
+截至 2026-09-02，从源站公开响应可以确认：Cloudflare 位于站点前端，页面是服务端输出的 HTML，浏览器资源包含 htmx 4.0.0、hx-live 和 FingerprintJS 5.2.0。本项目已经对齐这些可观察部分，并实现相同的 `Accept` 分流、真实 IP 展示、MaxMind 字段和浏览器指纹。
+
+2026-09-02 的源站更新也已同步：异步 `/hostname` 反向 DNS、OpenStreetMap 城市链接、`logo.svg`、Open Graph 图片与元数据、Maple Mono 700 Italic 字体、新版加载骨架，以及非浏览器 UA 的 `Bot` 显示。
+
+同日最终核验使用相同 Chrome target、viewport、DPR 和浏览器状态依次截图，源站与本地渲染共 `2,967,040` 个像素，差异像素为 `0`；Node 测试为 `9/9` 通过，生产 Docker 镜像构建及容器端点验证通过。
 
 源站没有公开服务端源码，因此无法从外部证明它内部也使用 Node.js、Express 或同一种 MMDB 加载方式。本项目属于“公开行为和可观察前端栈一致、后端实现可独立部署”，不是声称拿到了源站私有后端源码。
 
@@ -66,6 +70,7 @@ npm start
 
 ```text
 GET /             浏览器返回 HTML；curl 返回纯文本 IP
+GET /hostname     异步反向 DNS 主机名查询；无 PTR 时返回空文本
 GET /api/info     MaxMind 查询结果 JSON
 GET /healthz      健康状态
 ```
@@ -133,6 +138,7 @@ docker compose up -d --build
 ```text
 src/app.js          Express 路由和响应头
 src/ip.js           CF-Connecting-IP 与 UA 解析
+src/hostname.js     有超时保护的反向 DNS 查询
 src/maxmind.js      City/ASN MMDB 加载与查询
 src/template.js     与源站一致的服务端 HTML
 client.js           htmx/hx-live + FingerprintJS

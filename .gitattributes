@@ -1,4 +1,4 @@
 * text=auto eol=lf
-ROLLBACK.sh text eol=lf
-*.woff2 binary
 *.png binary
+*.woff2 binary
+DIFF_FILE binary

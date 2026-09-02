@@ -24,6 +24,10 @@ export function getClientIp(request, { trustCloudflare = true } = {}) {
 }
 
 export function detectClient(userAgent = '') {
+  if (!/Mozilla\/5\.0/i.test(userAgent)) {
+    return { browser: '', os: '', device: 'Bot' };
+  }
+
   let browser = 'Unknown';
   const chromium = userAgent.match(/(?:Chrome|CriOS)\/(\d+)/);
   const edge = userAgent.match(/Edg(?:A|iOS)?\/(\d+)/);

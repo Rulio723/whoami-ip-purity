@@ -1,12 +1,13 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import { lookupHostname } from './hostname.js';
 import { detectClient, getClientIp } from './ip.js';
 import { renderPage } from './template.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
-export function createApp({ geoService, trustCloudflare = true, ipOverride = '' } = {}) {
+export function createApp({ geoService, trustCloudflare = true, ipOverride = '', hostnameLookup = lookupHostname } = {}) {
   if (!geoService) throw new Error('geoService is required');
   const app = express();
   app.disable('x-powered-by');
@@ -25,6 +26,13 @@ export function createApp({ geoService, trustCloudflare = true, ipOverride = '' 
 
   app.get('/healthz', (_request, response) => {
     response.json({ status: 'ok', database: 'MaxMind GeoLite2 City + ASN' });
+  });
+
+  app.get('/hostname', async (request, response) => {
+    const ip = ipOverride || getClientIp(request, { trustCloudflare });
+    const hostname = await hostnameLookup(ip);
+    response.set('Cache-Control', 'no-store');
+    response.type('text/plain').send(hostname);
   });
 
   app.get('/api/info', (request, response) => {

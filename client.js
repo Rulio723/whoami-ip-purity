@@ -6,6 +6,15 @@ globalThis.htmx = htmx;
 
 const { q } = htmx.live;
 const browserSection = document.querySelector('#browser');
+const zoneTime = timezone => timezone
+  ? new Intl.DateTimeFormat(document.documentElement.lang, { timeStyle: 'short', timeZone: timezone }).format()
+  : null;
+
+htmx.registerExtension('zone-time', {
+  htmx_scope: (_element, context) => {
+    context.scope.zoneTime = zoneTime;
+  }
+});
 
 function paintBrowserValues() {
   const fingerprint = browserSection?.dataset.fingerprint || '';

@@ -5,5 +5,13 @@ databases
 *.tgz
 reference.png
 modified*.png
+latest-*.png
 research
 ROLLBACK_TEST.js
+ROLLBACK_TEST
+BASELINE_TEST
+MODIFIED_FILE
+DIFF_FILE
+VERIFICATION.txt
+ROLLBACK.sh
+.*-output.txt

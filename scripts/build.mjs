@@ -12,12 +12,13 @@ fs.mkdirSync(outputAssets, { recursive: true });
 
 const copies = [
   ['assets/maple-400.woff2', 'assets/maple-mono-latin-400-normal-WIx2rg0p.woff2'],
+  ['assets/maple-700-italic.woff2', 'assets/maple-mono-latin-700-italic-D7QxTey4.woff2'],
   ['assets/maple-700.woff2', 'assets/maple-mono-latin-700-normal-B_sC0Ion.woff2'],
   ['assets/runde-400.woff2', 'assets/open-runde-latin-400-normal-Crq_kbPk.woff2'],
   ['assets/runde-700.woff2', 'assets/open-runde-latin-700-normal-BeFL_mDB.woff2'],
   ['assets/flags.woff2', 'assets/TwemojiCountryFlags-Bymva2JV.woff2'],
-  ['assets/icon.svg', 'assets/icon.svg'],
-  ['assets/icon.svg', 'icon.svg']
+  ['assets/logo.svg', 'logo.svg'],
+  ['assets/og.png', 'og.png']
 ];
 
 for (const [source, destination] of copies) {

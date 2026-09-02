@@ -6,7 +6,7 @@ import { createMaxMindService } from '../src/maxmind.js';
 
 async function withServer(run) {
   const geoService = await createMaxMindService();
-  const server = createApp({ geoService }).listen(0, '127.0.0.1');
+  const server = createApp({ geoService, hostnameLookup: async () => '' }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   const { port } = server.address();
   try {
@@ -43,6 +43,10 @@ test('browser HTML is rendered from MaxMind City and ASN records', async () => {
     assert.match(html, /216\.40\.84\.0\/22/);
     assert.match(html, /AS1054 ZONT-LLC/);
     assert.match(html, />Zont LLC</);
+    assert.match(html, /hx-get="\/hostname"/);
+    assert.match(html, /openstreetmap\.org/);
+    assert.match(html, /href="\/logo\.svg"/);
+    assert.match(html, /maple-mono-latin-700-italic-D7QxTey4\.woff2/);
     assert.match(html, /data-fingerprint=""/);
     assert.match(html, /:text="data\.fingerprint/);
   });
@@ -58,5 +62,26 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
 
     const health = await fetch(`${origin}/healthz`).then(response => response.json());
     assert.deepEqual(health, { status: 'ok', database: 'MaxMind GeoLite2 City + ASN' });
+
+    const hostname = await fetch(`${origin}/hostname`);
+    assert.equal(hostname.status, 200);
+    assert.equal(hostname.headers.get('cache-control'), 'no-store');
+    assert.equal(await hostname.text(), '');
+  });
+});
+
+test('non-browser user agents are rendered as Bot like the source site', async () => {
+  await withServer(async origin => {
+    const response = await fetch(origin, {
+      headers: {
+        'CF-Connecting-IP': '216.40.85.151',
+        Accept: 'text/html',
+        'User-Agent': 'curl/8.16.0'
+      }
+    });
+    const html = await response.text();
+    assert.match(html, />设备<\/dt><dd[^>]*>Bot<\/dd>/);
+    assert.doesNotMatch(html, />浏览器<\/dt>/);
+    assert.doesNotMatch(html, />操作系统<\/dt>/);
   });
 });
