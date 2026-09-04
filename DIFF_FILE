@@ -1,355 +1,112 @@
 diff --git a/README.md b/README.md
-index 860d3ce..7112fad 100644
+index 7112fad..bc5d771 100644
 --- a/README.md
 +++ b/README.md
-@@ -8,6 +8,8 @@
+@@ -8,7 +8,7 @@
  
  2026-09-02 的源站更新也已同步：异步 `/hostname` 反向 DNS、OpenStreetMap 城市链接、`logo.svg`、Open Graph 图片与元数据、Maple Mono 700 Italic 字体、新版加载骨架，以及非浏览器 UA 的 `Bot` 显示。
  
-+2026-09-04 增加 IP 纯净度检测：综合 MaxMind ASN、服务商分类和 PTR 反向 DNS 信号生成 0–100 风险系数、纯净度、网络属性、置信度和可解释风险因子。检测通过异步片段加载，不阻塞首屏，也不依赖第三方在线评分接口。
-+
+-2026-09-04 增加 IP 纯净度检测：综合 MaxMind ASN、服务商分类和 PTR 反向 DNS 信号生成 0–100 风险系数、纯净度、网络属性、置信度和可解释风险因子。检测通过异步片段加载，不阻塞首屏，也不依赖第三方在线评分接口。
++2026-09-04 增加 IP 纯净度检测：综合 MaxMind ASN、服务商分类和 PTR 反向 DNS 信号生成 0–100 风险系数、纯净度、网络属性、置信度、可解释风险因子，以及与参考界面一致的人类/机器人流量比例条。比例为风险特征估算值；检测通过异步片段加载，不阻塞首屏，也不依赖第三方在线评分接口。
+ 
  同日最终核验使用相同 Chrome target、viewport、DPR 和浏览器状态依次截图，源站与本地渲染共 `2,967,040` 个像素，差异像素为 `0`；Node 测试为 `9/9` 通过，生产 Docker 镜像构建及容器端点验证通过。
  
- 源站没有公开服务端源码，因此无法从外部证明它内部也使用 Node.js、Express 或同一种 MMDB 加载方式。本项目属于“公开行为和可观察前端栈一致、后端实现可独立部署”，不是声称拿到了源站私有后端源码。
-@@ -72,6 +74,8 @@ npm start
- GET /             浏览器返回 HTML；curl 返回纯文本 IP
- GET /hostname     异步反向 DNS 主机名查询；无 PTR 时返回空文本
- GET /api/info     MaxMind 查询结果 JSON
-+GET /api/purity   当前 IP 的纯净度、风险系数与风险因子 JSON
-+GET /purity       页面异步加载的纯净度 HTML 片段
- GET /healthz      健康状态
- ```
- 
-@@ -140,6 +144,7 @@ src/app.js          Express 路由和响应头
- src/ip.js           CF-Connecting-IP 与 UA 解析
- src/hostname.js     有超时保护的反向 DNS 查询
- src/maxmind.js      City/ASN MMDB 加载与查询
-+src/purity.js       IP 纯净度评分、解释因子与查询缓存
- src/template.js     与源站一致的服务端 HTML
- client.js           htmx/hx-live + FingerprintJS
- scripts/build.mjs   浏览器资源构建与内容哈希缓存
 diff --git a/assets/main.css b/assets/main.css
-index c7f449a..edadb8f 100644
+index edadb8f..ecd406b 100644
 --- a/assets/main.css
 +++ b/assets/main.css
-@@ -1,2 +1,21 @@
- /*! tailwindcss v4.3.3 | MIT License | https://tailwindcss.com */
- @layer properties{@supports (((-webkit-hyphens:none)) and (not (margin-trim:inline))) or ((-moz-orient:inline) and (not (color:rgb(from red r g b)))){*,:before,:after,::backdrop{--tw-translate-x:0;--tw-translate-y:0;--tw-translate-z:0;--tw-rotate-x:initial;--tw-rotate-y:initial;--tw-rotate-z:initial;--tw-skew-x:initial;--tw-skew-y:initial;--tw-space-y-reverse:0;--tw-border-style:solid;--tw-leading:initial;--tw-font-weight:initial;--tw-tracking:initial;--tw-shadow:0 0 #0000;--tw-shadow-color:initial;--tw-shadow-alpha:100%;--tw-inset-shadow:0 0 #0000;--tw-inset-shadow-color:initial;--tw-inset-shadow-alpha:100%;--tw-ring-color:initial;--tw-ring-shadow:0 0 #0000;--tw-inset-ring-color:initial;--tw-inset-ring-shadow:0 0 #0000;--tw-ring-inset:initial;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-offset-shadow:0 0 #0000}}}@layer theme{:root,:host{--font-sans:"Open Runde", "Open Runde fallback", "Country Flags", ui-sans-serif, system-ui, sans-serif;--font-mono:"Maple Mono", "Maple Mono fallback", "Country Flags", ui-monospace, monospace;--color-pink-100:oklch(94.8% .028 342.258);--color-pink-200:oklch(89.9% .061 343.231);--color-pink-300:oklch(82.3% .12 346.018);--color-pink-400:oklch(71.8% .202 349.761);--color-pink-900:oklch(40.8% .153 2.432);--color-pink-950:oklch(28.4% .109 3.907);--color-black:#000;--color-white:#fff;--spacing:.25rem;--text-xs:.75rem;--text-xs--line-height:calc(1 / .75);--text-sm:.875rem;--text-sm--line-height:calc(1.25 / .875);--text-xl:1.25rem;--text-xl--line-height:calc(1.75 / 1.25);--text-2xl:1.5rem;--text-2xl--line-height:calc(2 / 1.5);--text-3xl:1.875rem;--text-3xl--line-height:calc(2.25 / 1.875);--text-4xl:2.25rem;--text-4xl--line-height:calc(2.5 / 2.25);--font-weight-bold:700;--tracking-tight:-.025em;--tracking-widest:.1em;--radius-xl:.75rem;--radius-2xl:1rem;--animate-pulse:pulse 2s cubic-bezier(.4, 0, .6, 1) infinite;--default-font-family:var(--font-sans);--default-mono-font-family:var(--font-mono)}}@layer base{*,:after,:before,::backdrop{box-sizing:border-box;border:0 solid;margin:0;padding:0}::file-selector-button{box-sizing:border-box;border:0 solid;margin:0;padding:0}html,:host{-webkit-text-size-adjust:100%;tab-size:4;line-height:1.5;font-family:var(--default-font-family,-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", "Noto Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");font-feature-settings:var(--default-font-feature-settings,normal);font-variation-settings:var(--default-font-variation-settings,normal);-webkit-tap-highlight-color:transparent}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;-webkit-text-decoration:inherit;-webkit-text-decoration:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,samp,pre{font-family:var(--default-mono-font-family,ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);font-feature-settings:var(--default-mono-font-feature-settings,normal);font-variation-settings:var(--default-mono-font-variation-settings,normal);font-size:1em}small{font-size:80%}sub,sup{vertical-align:baseline;font-size:75%;line-height:0;position:relative}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}:-moz-focusring:where(:not(iframe)){outline:auto}progress{vertical-align:baseline}summary{display:list-item}ol,ul,menu{list-style:none}img,svg,video,canvas,audio,iframe,embed,object{vertical-align:middle;display:block}img,video{max-width:100%;height:auto}button,input,select,optgroup,textarea{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}::file-selector-button{font:inherit;font-feature-settings:inherit;font-variation-settings:inherit;letter-spacing:inherit;color:inherit;opacity:1;background-color:#0000;border-radius:0}:where(select:is([multiple],[size])) optgroup{font-weight:bolder}:where(select:is([multiple],[size])) optgroup option{padding-inline-start:20px}::file-selector-button{margin-inline-end:4px}::placeholder{opacity:1}@supports (not ((-webkit-appearance:-apple-pay-button))) or (contain-intrinsic-size:1px){::placeholder{color:currentColor}@supports (color:color-mix(in lab, red, red)){::placeholder{color:color-mix(in oklab, currentcolor 50%, transparent)}}}textarea{resize:vertical}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-date-and-time-value{min-height:1lh;text-align:inherit}::-webkit-datetime-edit{display:inline-flex}::-webkit-datetime-edit-fields-wrapper{padding:0}::-webkit-datetime-edit{padding-block:0}::-webkit-datetime-edit-year-field{padding-block:0}::-webkit-datetime-edit-month-field{padding-block:0}::-webkit-datetime-edit-day-field{padding-block:0}::-webkit-datetime-edit-hour-field{padding-block:0}::-webkit-datetime-edit-minute-field{padding-block:0}::-webkit-datetime-edit-second-field{padding-block:0}::-webkit-datetime-edit-millisecond-field{padding-block:0}::-webkit-datetime-edit-meridiem-field{padding-block:0}::-webkit-calendar-picker-indicator{line-height:1}:-moz-ui-invalid{box-shadow:none}button,input:where([type=button],[type=reset],[type=submit]){appearance:button}::file-selector-button{appearance:button}::-webkit-inner-spin-button{height:auto}::-webkit-outer-spin-button{height:auto}[hidden]:where(:not([hidden=until-found])){display:none!important}}@layer components;@layer utilities{.\@container{container-type:inline-size}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0}.container{width:100%}@media (width>=40rem){.container{max-width:40rem}}@media (width>=48rem){.container{max-width:48rem}}@media (width>=64rem){.container{max-width:64rem}}@media (width>=80rem){.container{max-width:80rem}}@media (width>=96rem){.container{max-width:96rem}}.mx-auto{margin-inline:auto}.mt-5{margin-top:calc(var(--spacing) * 5)}.mt-6{margin-top:calc(var(--spacing) * 6)}.mt-\[3px\]{margin-top:3px}.mr-\[14px\]{margin-right:14px}.-mb-3{margin-bottom:calc(var(--spacing) * -3)}.mb-\[14px\]{margin-bottom:14px}.ml-\[-80px\]{margin-left:-80px}.iconify{width:1em;height:1em;-webkit-mask-image:var(--svg);-webkit-mask-image:var(--svg);mask-image:var(--svg);background-color:currentColor;display:inline-block;-webkit-mask-size:100% 100%;mask-size:100% 100%;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}.block{display:block}.flex{display:flex}.hidden{display:none}.inline{display:inline}.inline-block{display:inline-block}.size-4{width:calc(var(--spacing) * 4);height:calc(var(--spacing) * 4)}.h-\[1em\]{height:1em}.h-\[162px\]{height:162px}.h-full{height:100%}.min-h-dvh{min-height:100dvh}.w-\[8ch\]{width:8ch}.w-\[13ch\]{width:13ch}.w-\[24ch\]{width:24ch}.w-\[162px\]{width:162px}.w-fit{width:fit-content}.w-full{width:100%}.max-w-full{max-width:100%}.min-w-0{min-width:0}.min-w-\[min\(36rem\,100\%\)\]{min-width:min(36rem,100%)}.flex-1{flex:1}.shrink-0{flex-shrink:0}.translate-y-0\.5{--tw-translate-y:calc(var(--spacing) * .5);translate:var(--tw-translate-x) var(--tw-translate-y)}.transform{transform:var(--tw-rotate-x,) var(--tw-rotate-y,) var(--tw-rotate-z,) var(--tw-skew-x,) var(--tw-skew-y,)}.animate-pulse{animation:var(--animate-pulse)}.cursor-help{cursor:help}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-baseline{align-items:baseline}.items-center{align-items:center}.justify-between{justify-content:space-between}.justify-center{justify-content:center}.gap-1\.5{gap:calc(var(--spacing) * 1.5)}.gap-2{gap:calc(var(--spacing) * 2)}.gap-3{gap:calc(var(--spacing) * 3)}.gap-4{gap:calc(var(--spacing) * 4)}.gap-6{gap:calc(var(--spacing) * 6)}:where(.space-y-2\.5>:not(:last-child)){--tw-space-y-reverse:0;margin-block-start:calc(calc(var(--spacing) * 2.5) * var(--tw-space-y-reverse));margin-block-end:calc(calc(var(--spacing) * 2.5) * calc(1 - var(--tw-space-y-reverse)))}.gap-x-6{column-gap:calc(var(--spacing) * 6)}.gap-y-1{row-gap:var(--spacing)}.rounded-2xl{border-radius:var(--radius-2xl)}.rounded-\[35px\]{border-radius:35px}.rounded-\[38px\]{border-radius:38px}.rounded-\[48px\]{border-radius:48px}.rounded-\[51px\]{border-radius:51px}.rounded-full{border-radius:3.40282e38px}.rounded-xl{border-radius:var(--radius-xl)}.border-2{border-style:var(--tw-border-style);border-width:2px}.border-t-2{border-top-style:var(--tw-border-style);border-top-width:2px}.border-dashed{--tw-border-style:dashed;border-style:dashed}.border-black{border-color:var(--color-black)}.border-pink-200{border-color:var(--color-pink-200)}.bg-black{background-color:var(--color-black)}.bg-current{background-color:currentColor}.bg-pink-100{background-color:var(--color-pink-100)}.bg-pink-300{background-color:var(--color-pink-300)}.bg-white{background-color:var(--color-white)}.mask-\[url\(\/logo\.svg\)\]{-webkit-mask-image:url(/logo.svg);mask-image:url(/logo.svg)}.mask-contain{-webkit-mask-size:contain;mask-size:contain}.mask-center{-webkit-mask-position:50%;mask-position:50%}.mask-no-repeat{-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}.p-\[3px\]{padding:3px}.px-3\.5{padding-inline:calc(var(--spacing) * 3.5)}.px-4{padding-inline:calc(var(--spacing) * 4)}.px-6{padding-inline:calc(var(--spacing) * 6)}.py-1\.5{padding-block:calc(var(--spacing) * 1.5)}.py-6{padding-block:calc(var(--spacing) * 6)}.py-8{padding-block:calc(var(--spacing) * 8)}.py-16{padding-block:calc(var(--spacing) * 16)}.pt-10{padding-top:calc(var(--spacing) * 10)}.pr-24{padding-right:calc(var(--spacing) * 24)}.pr-\[82px\]{padding-right:82px}.pb-7{padding-bottom:calc(var(--spacing) * 7)}.pl-28{padding-left:calc(var(--spacing) * 28)}.text-center{text-align:center}.text-end{text-align:end}.align-middle{vertical-align:middle}.font-mono{font-family:var(--font-mono)}.font-sans{font-family:var(--font-sans)}.text-2xl{font-size:var(--text-2xl);line-height:var(--tw-leading,var(--text-2xl--line-height))}.text-3xl{font-size:var(--text-3xl);line-height:var(--tw-leading,var(--text-3xl--line-height))}.text-sm{font-size:var(--text-sm);line-height:var(--tw-leading,var(--text-sm--line-height))}.text-xl{font-size:var(--text-xl);line-height:var(--tw-leading,var(--text-xl--line-height))}.text-xs{font-size:var(--text-xs);line-height:var(--tw-leading,var(--text-xs--line-height))}.text-\[46px\]{font-size:46px}.text-\[112px\]{font-size:112px}.leading-none{--tw-leading:1;line-height:1}.font-bold{--tw-font-weight:var(--font-weight-bold);font-weight:var(--font-weight-bold)}.tracking-tight{--tw-tracking:var(--tracking-tight);letter-spacing:var(--tracking-tight)}.tracking-widest{--tw-tracking:var(--tracking-widest);letter-spacing:var(--tracking-widest)}.text-balance{text-wrap:balance}.break-words{overflow-wrap:break-word}.text-pink-900{color:var(--color-pink-900)}.text-pink-900\/75{color:#861043bf}@supports (color:color-mix(in lab, red, red)){.text-pink-900\/75{color:color-mix(in oklab, var(--color-pink-900) 75%, transparent)}}.text-pink-950{color:var(--color-pink-950)}.uppercase{text-transform:uppercase}.italic{font-style:italic}.underline{text-decoration-line:underline}.decoration-pink-400{-webkit-text-decoration-color:var(--color-pink-400);text-decoration-color:var(--color-pink-400)}.decoration-dashed{text-decoration-style:dashed}.underline-offset-2{text-underline-offset:2px}.shadow-cap{--tw-shadow:6px 6px 0 0 var(--tw-shadow-color,var(--color-black));box-shadow:var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)}.shadow-tab{--tw-shadow:3px 3px 0 0 var(--tw-shadow-color,var(--color-black));box-shadow:var(--tw-inset-shadow), var(--tw-inset-ring-shadow), var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow)}.select-all{-webkit-user-select:all;user-select:all}.select-none{-webkit-user-select:none;user-select:none}.mingcute--location-line{--svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-width='2' d='M15 11a3 3 0 1 1-6 0a3 3 0 0 1 6 0Z'/%3E%3Cpath fill='none' stroke='black' stroke-width='2' d='M20 11c0 5.396-5.896 9.108-7.565 10.05a.87.87 0 0 1-.87 0C9.895 20.108 4 16.396 4 11a8 8 0 1 1 16 0Z'/%3E%3C/svg%3E")}.mingcute--send-plane-line{--svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-linejoin='round' stroke-width='2' d='M20 5L8.5 14.5V18l2-2M3 9l17.5-4.5l-6 15.5z'/%3E%3C/svg%3E")}.mingcute--web-line{--svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-width='2' d='M20 11H4m3-3h.01M10 8h.01M13 8h.01M5 19h14a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Z'/%3E%3C/svg%3E")}.simple-icons--torbrowser{--svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='24' height='24'%3E%3Cpath fill='black' d='M12 21.82v-1.46A8.36 8.36 0 0 0 20.36 12A8.36 8.36 0 0 0 12 3.64V2.18A9.83 9.83 0 0 1 21.82 12A9.83 9.83 0 0 1 12 21.82m0-5.09A4.74 4.74 0 0 0 16.73 12A4.74 4.74 0 0 0 12 7.27V5.82A6.17 6.17 0 0 1 18.18 12A6.17 6.17 0 0 1 12 18.18zm0-7.27A2.54 2.54 0 0 1 14.55 12A2.54 2.54 0 0 1 12 14.54zM0 12a12 12 0 0 0 12 12a12 12 0 0 0 12-12A12 12 0 0 0 12 0A12 12 0 0 0 0 12'/%3E%3C/svg%3E")}.empty\:hidden:empty{display:none}@media (hover:hover){.hover\:underline:hover{text-decoration-line:underline}}@media (prefers-reduced-motion:no-preference){.motion-safe\:animate-pulse{animation:var(--animate-pulse)}}@media (width>=40rem){.sm\:hidden{display:none}.sm\:inline{display:inline}.sm\:w-\[32ch\]{width:32ch}.sm\:justify-between{justify-content:space-between}.sm\:px-8{padding-inline:calc(var(--spacing) * 8)}.sm\:text-start{text-align:start}.sm\:text-2xl{font-size:var(--text-2xl);line-height:var(--tw-leading,var(--text-2xl--line-height))}.sm\:text-3xl{font-size:var(--text-3xl);line-height:var(--tw-leading,var(--text-3xl--line-height))}.sm\:text-4xl{font-size:var(--text-4xl);line-height:var(--tw-leading,var(--text-4xl--line-height))}}}@font-face{font-family:Maple Mono fallback;src:local(Courier New);size-adjust:99.9837%;ascent-override:102.017%;descent-override:30.0049%;line-gap-override:0%;font-style:normal;font-weight:400}@font-face{font-family:Maple Mono;font-style:normal;font-display:swap;font-weight:400;src:url(/assets/maple-mono-latin-400-normal-WIx2rg0p.woff2)format("woff2"),url(/assets/maple-mono-latin-400-normal-OcfaEJ46.woff)format("woff")}@font-face{font-family:Maple Mono fallback;src:local(Courier New);size-adjust:99.9837%;ascent-override:102.017%;descent-override:30.0049%;line-gap-override:0%;font-style:normal;font-weight:700}@font-face{font-family:Maple Mono;font-style:normal;font-display:swap;font-weight:700;src:url(/assets/maple-mono-latin-700-normal-B_sC0Ion.woff2)format("woff2"),url(/assets/maple-mono-latin-700-normal-DeN56mtg.woff)format("woff")}@font-face{font-family:Maple Mono fallback;src:local(Courier New);size-adjust:99.9837%;ascent-override:102.017%;descent-override:30.0049%;line-gap-override:0%;font-style:italic;font-weight:700}@font-face{font-family:Maple Mono;font-style:italic;font-display:swap;font-weight:700;src:url(/assets/maple-mono-latin-700-italic-D7QxTey4.woff2)format("woff2"),url(/assets/maple-mono-latin-700-italic-CGj4YFr-.woff)format("woff")}@font-face{font-family:Open Runde fallback;src:local(Arial);size-adjust:107.06%;ascent-override:90.4869%;descent-override:22.5554%;line-gap-override:0%;font-style:normal;font-weight:400}@font-face{font-family:Open Runde;font-style:normal;font-display:swap;font-weight:400;src:url(/assets/open-runde-latin-400-normal-Crq_kbPk.woff2)format("woff2"),url(/assets/open-runde-latin-400-normal-XRnp7O8j.woff)format("woff")}@font-face{font-family:Open Runde fallback;src:local(Arial);size-adjust:110.485%;ascent-override:87.6817%;descent-override:21.8561%;line-gap-override:0%;font-style:normal;font-weight:700}@font-face{font-family:Open Runde;font-style:normal;font-display:swap;font-weight:700;src:url(/assets/open-runde-latin-700-normal-BeFL_mDB.woff2)format("woff2"),url(/assets/open-runde-latin-700-normal-DIFtOJ1o.woff)format("woff")}@font-face{font-family:Country Flags;font-style:normal;font-display:swap;unicode-range:U+1F1E6-1F1FF;src:url(/assets/TwemojiCountryFlags-Bymva2JV.woff2)format("woff2")}@property --tw-translate-x{syntax:"*";inherits:false;initial-value:0}@property --tw-translate-y{syntax:"*";inherits:false;initial-value:0}@property --tw-translate-z{syntax:"*";inherits:false;initial-value:0}@property --tw-rotate-x{syntax:"*";inherits:false}@property --tw-rotate-y{syntax:"*";inherits:false}@property --tw-rotate-z{syntax:"*";inherits:false}@property --tw-skew-x{syntax:"*";inherits:false}@property --tw-skew-y{syntax:"*";inherits:false}@property --tw-space-y-reverse{syntax:"*";inherits:false;initial-value:0}@property --tw-border-style{syntax:"*";inherits:false;initial-value:solid}@property --tw-leading{syntax:"*";inherits:false}@property --tw-font-weight{syntax:"*";inherits:false}@property --tw-tracking{syntax:"*";inherits:false}@property --tw-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-shadow-color{syntax:"*";inherits:false}@property --tw-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-inset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-shadow-color{syntax:"*";inherits:false}@property --tw-inset-shadow-alpha{syntax:"<percentage>";inherits:false;initial-value:100%}@property --tw-ring-color{syntax:"*";inherits:false}@property --tw-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-inset-ring-color{syntax:"*";inherits:false}@property --tw-inset-ring-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@property --tw-ring-inset{syntax:"*";inherits:false}@property --tw-ring-offset-width{syntax:"<length>";inherits:false;initial-value:0}@property --tw-ring-offset-color{syntax:"*";inherits:false;initial-value:#fff}@property --tw-ring-offset-shadow{syntax:"*";inherits:false;initial-value:0 0 #0000}@keyframes pulse{50%{opacity:.5}}
-+
-+/* IP purity panel */
-+.mingcute--shield-check-line{--svg:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='black' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M12 3.5L20 6v5.8c0 4.7-3.2 7.7-8 9.7c-4.8-2-8-5-8-9.7V6zM8.5 12l2.2 2.2l4.8-5'/%3E%3C/svg%3E")}
-+.purity-loading{display:flex;flex-direction:column;align-items:center;gap:.65rem;padding:1rem 0;color:#861043bf;font-size:.75rem;text-align:center}
-+.purity-heading{display:flex;align-items:center;justify-content:space-between;gap:1rem}
-+.purity-score{display:flex;align-items:baseline;font-family:var(--font-mono);line-height:1;color:#831843}
-+.purity-score strong{font-size:2.65rem;letter-spacing:-.08em}
-+.purity-score span{font-size:.75rem;margin-left:.3rem;color:#861043bf}
-+.purity-caption{margin-top:.35rem;font-size:.7rem;color:#861043bf;text-align:center}
-+.purity-verdict{display:flex;min-width:0;flex:1;flex-direction:column;align-items:flex-end;text-align:right}
-+.purity-verdict strong{font-size:1.1rem;color:#831843}
-+.purity-verdict span{margin-top:.25rem;max-width:22rem;color:#861043bf;font-size:.75rem;line-height:1.45}
-+.purity-progress{width:100%;height:.8rem;margin-top:1.2rem;overflow:hidden;border:2px solid #000;border-radius:999px;background:linear-gradient(90deg,#86efac 0 25%,#fde047 25% 50%,#fb923c 50% 70%,#fb7185 70% 100%);box-shadow:2px 2px 0 #000}
-+.purity-progress::-webkit-progress-bar{background:linear-gradient(90deg,#86efac 0 25%,#fde047 25% 50%,#fb923c 50% 70%,#fb7185 70% 100%)}
-+.purity-progress::-webkit-progress-value{background:rgba(0,0,0,.15);border-right:2px solid #000}
-+.purity-progress::-moz-progress-bar{background:rgba(0,0,0,.15);border-right:2px solid #000}
-+.purity-scale{display:flex;justify-content:space-between;margin-top:.35rem;font-family:var(--font-mono);font-size:.62rem;color:#861043bf}
-+.purity-note{margin-top:1.2rem;padding-top:1rem;border-top:2px dashed #fbcfe8;color:#861043bf;font-size:.7rem;line-height:1.55;text-align:center}
-+@media (max-width:400px){.purity-heading{align-items:flex-start}.purity-score strong{font-size:2.2rem}.purity-verdict span{max-width:12rem}}
-diff --git a/src/app.js b/src/app.js
-index 91997a8..39ddffe 100644
---- a/src/app.js
-+++ b/src/app.js
-@@ -3,13 +3,15 @@ import { fileURLToPath } from 'node:url';
- import express from 'express';
- import { lookupHostname } from './hostname.js';
- import { detectClient, getClientIp } from './ip.js';
--import { renderPage } from './template.js';
-+import { createPurityService } from './purity.js';
-+import { renderPage, renderPurityPanel } from './template.js';
- 
- const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
- 
- export function createApp({ geoService, trustCloudflare = true, ipOverride = '', hostnameLookup = lookupHostname } = {}) {
-   if (!geoService) throw new Error('geoService is required');
-   const app = express();
-+  const purityService = createPurityService({ hostnameLookup });
-   app.disable('x-powered-by');
-   app.set('trust proxy', 1);
- 
-@@ -45,6 +47,22 @@ export function createApp({ geoService, trustCloudflare = true, ipOverride = '',
-     });
-   });
- 
-+  app.get('/api/purity', async (request, response) => {
-+    const ip = ipOverride || getClientIp(request, { trustCloudflare });
-+    const geo = geoService.lookup(ip);
-+    const purity = await purityService.lookup(ip, geo);
-+    response.set('Cache-Control', 'private, no-store');
-+    response.json({ ...purity, checkedAt: new Date().toISOString() });
-+  });
-+
-+  app.get('/purity', async (request, response) => {
-+    const ip = ipOverride || getClientIp(request, { trustCloudflare });
-+    const geo = geoService.lookup(ip);
-+    const purity = await purityService.lookup(ip, geo);
-+    response.set('Cache-Control', 'private, no-store');
-+    response.type('html').send(renderPurityPanel(purity));
-+  });
-+
-   app.get('/', (request, response) => {
-     const ip = ipOverride || getClientIp(request, { trustCloudflare });
-     response.set('Cache-Control', 'no-store');
+@@ -19,3 +19,13 @@
+ .purity-scale{display:flex;justify-content:space-between;margin-top:.35rem;font-family:var(--font-mono);font-size:.62rem;color:#861043bf}
+ .purity-note{margin-top:1.2rem;padding-top:1rem;border-top:2px dashed #fbcfe8;color:#861043bf;font-size:.7rem;line-height:1.55;text-align:center}
+ @media (max-width:400px){.purity-heading{align-items:flex-start}.purity-score strong{font-size:2.2rem}.purity-verdict span{max-width:12rem}}
++.traffic-mix{margin-top:1.45rem;padding-top:1.15rem;border-top:2px dashed #fbcfe8}
++.traffic-mix-title{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;margin-bottom:.55rem;color:#861043bf;font-size:.875rem}
++.traffic-mix-title small{font-size:.65rem;opacity:.72}
++.traffic-progress{display:block;width:100%;height:.55rem;overflow:hidden;border:0;border-radius:999px;background:#fb7185}
++.traffic-progress::-webkit-progress-bar{background:#fb7185;border-radius:999px}
++.traffic-progress::-webkit-progress-value{background:#48c78e;border-radius:999px 0 0 999px}
++.traffic-progress::-moz-progress-bar{background:#48c78e;border-radius:999px 0 0 999px}
++.traffic-legend{display:flex;justify-content:space-between;margin-top:.35rem;font-family:var(--font-mono);font-size:.75rem}
++.traffic-legend span:first-child{color:#16a36a}
++.traffic-legend span:last-child{color:#f43f68}
 diff --git a/src/purity.js b/src/purity.js
-new file mode 100644
-index 0000000..459c6c3
---- /dev/null
+index 459c6c3..c25849c 100644
+--- a/src/purity.js
 +++ b/src/purity.js
-@@ -0,0 +1,132 @@
-+import net from 'node:net';
-+
-+const HOSTING_ASNS = new Set([
-+  1054, 13335, 14618, 15169, 16276, 16509, 20473, 24940, 31898, 37963,
-+  45090, 45102, 63949, 8075, 14061
-+]);
-+
-+const HOSTING_PATTERN = /\b(?:aws|amazon|azure|cloud|colo|datacenter|data center|digitalocean|google|hetzner|hosting|host|linode|microsoft|oracle|ovh|server|tencent|vps|vultr)\b/i;
-+const RESIDENTIAL_PATTERN = /\b(?:broadband|cable|communications|fiber|fibre|mobile|residential|telecom|telefonica|telstra|unicom|verizon|comcast|charter|cmcc)\b/i;
-+const ANONYMIZER_PATTERN = /\b(?:anonymous|anonymizer|exit node|proxy|tor|vpn)\b/i;
-+const PTR_HOSTING_PATTERN = /(?:^|[.\-_])(?:cloud|colo|host|server|static|vps)(?:[.\-_]|$)/i;
-+const PTR_RESIDENTIAL_PATTERN = /(?:^|[.\-_])(?:broadband|cable|dhcp|dsl|dynamic|mobile|pool|pppoe|res)(?:[.\-_]|$)/i;
-+
-+function clamp(value, min = 0, max = 100) {
-+  return Math.min(max, Math.max(min, Math.round(value)));
-+}
-+
-+function classify(score) {
-+  if (score <= 15) return { key: 'clean', label: '纯净', summary: '未发现明显风险特征' };
-+  if (score <= 25) return { key: 'very-low', label: '极低风险', summary: '网络特征接近普通用户连接' };
-+  if (score <= 40) return { key: 'low', label: '低风险', summary: '存在少量需要留意的网络特征' };
-+  if (score <= 50) return { key: 'mild', label: '轻度风险', summary: '可能属于机房、云服务或共享出口' };
-+  if (score <= 70) return { key: 'medium', label: '中度风险', summary: '多个信号表明该地址并非普通住宅出口' };
-+  if (score <= 85) return { key: 'high', label: '高风险', summary: '该地址具有明显代理或匿名网络特征' };
-+  return { key: 'critical', label: '极高风险', summary: '该地址具有强匿名化或高风险基础设施特征' };
-+}
-+
-+function factor(label, value, weight, detail) {
-+  return { label, value, weight, detail };
-+}
-+
-+export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
-+  if (!net.isIP(ip || '')) {
-+    return {
-+      ip: ip || '', riskScore: 100, purityScore: 0, level: '无法评估', levelKey: 'unknown',
-+      summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '', factors: []
-+    };
-+  }
-+
-+  const provider = String(geo.provider || '');
-+  const normalizedHostname = String(hostname || '').replace(/\.$/, '').toLowerCase();
-+  const asn = Number(geo.asn) || null;
-+  const factors = [];
-+  let score = 7;
-+  let networkType = '普通网络';
-+
-+  if (ANONYMIZER_PATTERN.test(provider) || ANONYMIZER_PATTERN.test(normalizedHostname)) {
-+    score += 58;
-+    networkType = '匿名代理';
-+    factors.push(factor('匿名网络', '命中', 58, 'ASN 或 PTR 名称包含 VPN、代理或 Tor 特征'));
-+  } else if (HOSTING_ASNS.has(asn) || HOSTING_PATTERN.test(provider)) {
-+    score += 35;
-+    networkType = '机房 / 云服务';
-+    factors.push(factor('网络类型', '机房 / 云服务', 35, 'ASN 属于已知托管网络或服务商名称具有托管特征'));
-+  } else if (RESIDENTIAL_PATTERN.test(provider)) {
-+    networkType = '住宅 / 运营商';
-+    factors.push(factor('网络类型', '住宅 / 运营商', -4, '服务商名称具有宽带或移动运营商特征'));
-+    score -= 4;
-+  } else {
-+    score += 8;
-+    networkType = '商业 / 未分类';
-+    factors.push(factor('网络类型', '未分类', 8, 'ASN 无法明确归类为住宅或托管网络'));
-+  }
-+
-+  if (normalizedHostname) {
-+    if (!ANONYMIZER_PATTERN.test(normalizedHostname) && PTR_HOSTING_PATTERN.test(normalizedHostname)) {
-+      score += 12;
-+      factors.push(factor('PTR 主机名', '托管特征', 12, normalizedHostname));
-+    } else if (PTR_RESIDENTIAL_PATTERN.test(normalizedHostname)) {
-+      score -= 4;
-+      factors.push(factor('PTR 主机名', '动态接入特征', -4, normalizedHostname));
-+    } else {
-+      factors.push(factor('PTR 主机名', '已解析', 0, normalizedHostname));
-+    }
-+  } else {
-+    score += 4;
-+    factors.push(factor('PTR 主机名', '无记录', 4, '反向 DNS 未返回主机名'));
-+  }
-+
-+  if (!asn) {
-+    score += 9;
-+    factors.push(factor('ASN', '无记录', 9, '无法确认网络自治系统'));
-+  } else {
-+    factors.push(factor('ASN', `AS${asn}`, 0, provider || '未知服务商'));
-+  }
-+
-+  if (!geo.countryCode) {
-+    score += 5;
-+    factors.push(factor('地理信息', '不完整', 5, '缺少注册国家或地区信息'));
-+  }
-+
-+  score = clamp(score);
-+  const classification = classify(score);
-+  const evidenceCount = [asn, provider, normalizedHostname, geo.countryCode].filter(Boolean).length;
-+
-+  return {
-+    ip,
-+    riskScore: score,
-+    purityScore: 100 - score,
-+    level: classification.label,
-+    levelKey: classification.key,
-+    summary: classification.summary,
-+    networkType,
-+    confidence: evidenceCount >= 3 ? '高' : evidenceCount === 2 ? '中' : '低',
-+    hostname: normalizedHostname,
-+    factors
-+  };
-+}
-+
-+export function createPurityService({ hostnameLookup, ttlMs = 10 * 60 * 1000, maxEntries = 1000 } = {}) {
-+  if (typeof hostnameLookup !== 'function') throw new Error('hostnameLookup is required');
-+  const cache = new Map();
-+
-+  return {
-+    async lookup(ip, geo) {
-+      const now = Date.now();
-+      const cached = cache.get(ip);
-+      if (cached && cached.expiresAt > now) return cached.value;
-+
-+      const pending = Promise.resolve(hostnameLookup(ip))
-+        .catch(() => '')
-+        .then(hostname => analyzeIpPurity({ ip, geo, hostname }));
-+      cache.set(ip, { expiresAt: now + ttlMs, value: pending });
-+
-+      if (cache.size > maxEntries) {
-+        const oldest = cache.keys().next().value;
-+        cache.delete(oldest);
-+      }
-+      return pending;
-+    }
-+  };
-+}
+@@ -33,7 +33,8 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
+   if (!net.isIP(ip || '')) {
+     return {
+       ip: ip || '', riskScore: 100, purityScore: 0, level: '无法评估', levelKey: 'unknown',
+-      summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '', factors: []
++      summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '',
++      humanTraffic: 0, botTraffic: 100, factors: []
+     };
+   }
+ 
+@@ -97,6 +98,8 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
+     ip,
+     riskScore: score,
+     purityScore: 100 - score,
++    humanTraffic: Number((100 - score).toFixed(2)),
++    botTraffic: Number(score.toFixed(2)),
+     level: classification.label,
+     levelKey: classification.key,
+     summary: classification.summary,
 diff --git a/src/template.js b/src/template.js
-index 6142b11..0b776c8 100644
+index 0b776c8..1a0edbe 100644
 --- a/src/template.js
 +++ b/src/template.js
-@@ -19,6 +19,15 @@ function tab(iconClass, title, extra = '') {
-   return `<div class="flex items-center justify-between gap-3"><h2 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="iconify size-4 ${iconClass}" aria-hidden="true"></span> ${escapeHtml(title)}</h2>${extra}</div>`;
+@@ -25,7 +25,7 @@ export function renderPurityPanel(purity) {
+     .map(item => row(item.label, `${item.value}${item.weight > 0 ? ` (+${item.weight})` : ` (${item.weight})`}`))
+     .join('');
+ 
+-  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div><dl class="mt-5 space-y-2.5">${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录')}${factorRows}</dl><p class="purity-note">本结果由 MaxMind ASN、服务商分类与反向 DNS 信号综合计算，不会保存你的 IP。</p></div>`;
++  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div><div class="traffic-mix"><div class="traffic-mix-title"><span>人机流量比</span><small>根据风险特征估算</small></div><progress class="traffic-progress" max="100" value="${escapeHtml(purity.humanTraffic)}" aria-label="预计人类流量 ${escapeHtml(purity.humanTraffic)}%，机器人流量 ${escapeHtml(purity.botTraffic)}%"></progress><div class="traffic-legend"><span>human ${escapeHtml(purity.humanTraffic.toFixed(2))}%</span><span>bot ${escapeHtml(purity.botTraffic.toFixed(2))}%</span></div></div><dl class="mt-5 space-y-2.5">${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录')}${factorRows}</dl><p class="purity-note">本结果由 MaxMind ASN、服务商分类与反向 DNS 信号综合计算，不会保存你的 IP。</p></div>`;
  }
  
-+export function renderPurityPanel(purity) {
-+  const factorRows = purity.factors
-+    .filter(item => item.weight !== 0)
-+    .map(item => row(item.label, `${item.value}${item.weight > 0 ? ` (+${item.weight})` : ` (${item.weight})`}`))
-+    .join('');
-+
-+  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div><dl class="mt-5 space-y-2.5">${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录')}${factorRows}</dl><p class="purity-note">本结果由 MaxMind ASN、服务商分类与反向 DNS 信号综合计算，不会保存你的 IP。</p></div>`;
-+}
-+
  export function renderPage({ ip, geo, client }) {
-   const countryText = `${countryFlag(geo.countryCode)} ${geo.country}`.trim();
-   const mapValue = geo.latitude !== undefined && geo.longitude !== undefined
-@@ -29,5 +38,5 @@ export function renderPage({ ip, geo, client }) {
-     ? row('设备', 'Bot')
-     : `${row('浏览器', client.browser)}${row('操作系统', client.os)}${row('设备', client.device)}`;
- 
--  return `<!doctype html><html lang="zh-Hans" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>我是谁？</title><link rel="preload" as="font" type="font/woff2" href="/assets/TwemojiCountryFlags-Bymva2JV.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-400-normal-WIx2rg0p.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-italic-D7QxTey4.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-normal-B_sC0Ion.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-400-normal-Crq_kbPk.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-700-normal-BeFL_mDB.woff2" crossorigin="anonymous"><link rel="stylesheet" href="${browserAssets.css}"><script type="module" src="${browserAssets.client}"></script><link rel="modulepreload" href="${browserAssets.client}"><link rel="dns-prefetch" href="https://track.ecchi.cx"><meta name="description" content="可爱的 IP 地址查询工具。"><meta name="color-scheme" content="light"><meta name="theme-color" content="#fda5d5"><meta property="og:type" content="website"><meta property="og:url" content="https://whoami.moe/"><meta property="og:title" content="Who am I?"><meta property="og:description" content="A cute IP address lookup."><meta property="og:image" content="https://whoami.moe/og.png?v=047a2f6"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/logo.svg" type="image/svg+xml"><noscript><style>[data-pending]{display:none}</style></noscript></head><body class="min-h-dvh bg-pink-100 font-sans text-pink-950"><main class="mx-auto flex min-h-dvh w-fit min-w-[min(36rem,100%)] max-w-full flex-col justify-center px-4 py-8"><div class="relative -mb-3 flex flex-wrap items-center justify-between gap-2 px-6 sm:px-8"><h1 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="size-4 bg-current mask-[url(/logo.svg)] mask-contain mask-center mask-no-repeat" aria-hidden="true"></span> 我是谁？</h1></div><article class="rounded-2xl border-2 border-black bg-white shadow-cap"><header class="flex flex-col gap-4 px-6 pb-7 pt-10 sm:px-8"><p dir="ltr" role="group" aria-label="IPv4" class="break-words text-center font-mono font-bold tracking-tight text-3xl sm:text-4xl">${escapeHtml(ip)}</p><p dir="ltr" class="@container break-words text-center font-mono text-sm font-bold text-pink-900/75 empty:hidden" data-pending="" hx-get="/hostname" hx-swap="textContent" hx-trigger="load"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span></p></header><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--location-line', '位置', '<div class="translate-y-0.5"><a class="text-xs text-pink-900/75 hover:underline" href="https://www.maxmind.com" target="_blank">MaxMind</a></div>')}<dl class="mt-5 space-y-2.5">${row('城市', mapValue, true)}${row('邮政编码', geo.postalCode)}${row('地区', geo.region)}${row('国家', countryText)}${row('时区', `<span class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" data-timezone="${escapeHtml(geo.timezone)}">${escapeHtml(geo.timezone)}</span>`, true)}${row('网络', geo.network)}${row('ASN', asn)}${row('服务商', geo.provider)}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--send-plane-line', '请求')}<dl class="mt-5 space-y-2.5">${requestRows}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8" data-fingerprint="" data-pending="" data-timezone="" id="browser">${tab('mingcute--web-line', '浏览器')}<dl class="mt-5 space-y-2.5">${row('指纹', '<span data-fingerprint-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[8ch] sm:w-[32ch]" aria-hidden="true" :hidden="!!data.fingerprint"></span> <span data-fingerprint-short class="sm:hidden" :text="data.fingerprint?.slice(0, 8)"></span> <span data-fingerprint-full class="hidden sm:inline" :text="data.fingerprint"></span>', true)}${row('时区', '<span data-timezone-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[13ch]" aria-hidden="true" :hidden="!!data.timezone"></span> <span data-timezone-value class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" :text="data.timezone"></span>', true)}</dl></section><footer class="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 border-t-2 border-dashed border-pink-200 px-6 py-6 text-center text-pink-900/75 sm:justify-between sm:px-8 sm:text-start"><p class="font-mono text-xs"><span aria-hidden="true" class="select-none">$ </span><span class="select-all">curl whoami.moe</span></p><p class="text-xs">你的 IP 地址不会被保存。</p></footer></article></main></body></html>`;
-+  return `<!doctype html><html lang="zh-Hans" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>我是谁？</title><link rel="preload" as="font" type="font/woff2" href="/assets/TwemojiCountryFlags-Bymva2JV.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-400-normal-WIx2rg0p.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-italic-D7QxTey4.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-normal-B_sC0Ion.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-400-normal-Crq_kbPk.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-700-normal-BeFL_mDB.woff2" crossorigin="anonymous"><link rel="stylesheet" href="${browserAssets.css}"><script type="module" src="${browserAssets.client}"></script><link rel="modulepreload" href="${browserAssets.client}"><link rel="dns-prefetch" href="https://track.ecchi.cx"><meta name="description" content="可爱的 IP 地址、纯净度与浏览器指纹检测工具。"><meta name="color-scheme" content="light"><meta name="theme-color" content="#fda5d5"><meta property="og:type" content="website"><meta property="og:url" content="https://ip.rulio.sryze.cc/"><meta property="og:title" content="Who am I?"><meta property="og:description" content="A cute IP address lookup."><meta property="og:image" content="https://ip.rulio.sryze.cc/og.png?v=047a2f6"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/logo.svg" type="image/svg+xml"><noscript><style>[data-pending]{display:none}</style></noscript></head><body class="min-h-dvh bg-pink-100 font-sans text-pink-950"><main class="mx-auto flex min-h-dvh w-fit min-w-[min(36rem,100%)] max-w-full flex-col justify-center px-4 py-8"><div class="relative -mb-3 flex flex-wrap items-center justify-between gap-2 px-6 sm:px-8"><h1 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="size-4 bg-current mask-[url(/logo.svg)] mask-contain mask-center mask-no-repeat" aria-hidden="true"></span> 我是谁？</h1></div><article class="rounded-2xl border-2 border-black bg-white shadow-cap"><header class="flex flex-col gap-4 px-6 pb-7 pt-10 sm:px-8"><p dir="ltr" role="group" aria-label="IPv4" class="break-words text-center font-mono font-bold tracking-tight text-3xl sm:text-4xl">${escapeHtml(ip)}</p><p dir="ltr" class="@container break-words text-center font-mono text-sm font-bold text-pink-900/75 empty:hidden" data-pending="" hx-get="/hostname" hx-swap="textContent" hx-trigger="load"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span></p></header><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--location-line', '位置', '<div class="translate-y-0.5"><a class="text-xs text-pink-900/75 hover:underline" href="https://www.maxmind.com" target="_blank">MaxMind</a></div>')}<dl class="mt-5 space-y-2.5">${row('城市', mapValue, true)}${row('邮政编码', geo.postalCode)}${row('地区', geo.region)}${row('国家', countryText)}${row('时区', `<span class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" data-timezone="${escapeHtml(geo.timezone)}">${escapeHtml(geo.timezone)}</span>`, true)}${row('网络', geo.network)}${row('ASN', asn)}${row('服务商', geo.provider)}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--send-plane-line', '请求')}<dl class="mt-5 space-y-2.5">${requestRows}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--shield-check-line', 'IP 纯净度')}<div class="mt-5" id="purity" data-pending="" hx-get="/purity" hx-trigger="load" hx-swap="innerHTML"><div class="purity-loading"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span><span>正在综合 ASN 与反向 DNS 信号…</span></div></div></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8" data-fingerprint="" data-pending="" data-timezone="" id="browser">${tab('mingcute--web-line', '浏览器')}<dl class="mt-5 space-y-2.5">${row('指纹', '<span data-fingerprint-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[8ch] sm:w-[32ch]" aria-hidden="true" :hidden="!!data.fingerprint"></span> <span data-fingerprint-short class="sm:hidden" :text="data.fingerprint?.slice(0, 8)"></span> <span data-fingerprint-full class="hidden sm:inline" :text="data.fingerprint"></span>', true)}${row('时区', '<span data-timezone-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[13ch]" aria-hidden="true" :hidden="!!data.timezone"></span> <span data-timezone-value class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" :text="data.timezone"></span>', true)}</dl></section><footer class="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 border-t-2 border-dashed border-pink-200 px-6 py-6 text-center text-pink-900/75 sm:justify-between sm:px-8 sm:text-start"><p class="font-mono text-xs"><span aria-hidden="true" class="select-none">$ </span><span class="select-all">curl ip.rulio.sryze.cc</span></p><p class="text-xs">你的 IP 地址不会被保存。</p></footer></article></main></body></html>`;
- }
 diff --git a/tests/app.test.mjs b/tests/app.test.mjs
-index 0530b31..7998333 100644
+index 7998333..c1a8178 100644
 --- a/tests/app.test.mjs
 +++ b/tests/app.test.mjs
-@@ -49,6 +49,8 @@ test('browser HTML is rendered from MaxMind City and ASN records', async () => {
-     assert.match(html, /maple-mono-latin-700-italic-D7QxTey4\.woff2/);
-     assert.match(html, /data-fingerprint=""/);
-     assert.match(html, /:text="data\.fingerprint/);
-+    assert.match(html, /IP 纯净度/);
-+    assert.match(html, /hx-get="\/purity"/);
-   });
- });
+@@ -76,6 +76,8 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
+     assert.equal(purity.riskScore, 46);
+     assert.equal(purity.level, '轻度风险');
+     assert.equal(purity.networkType, '机房 / 云服务');
++    assert.equal(purity.humanTraffic, 54);
++    assert.equal(purity.botTraffic, 46);
  
-@@ -67,6 +69,20 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
-     assert.equal(hostname.status, 200);
-     assert.equal(hostname.headers.get('cache-control'), 'no-store');
-     assert.equal(await hostname.text(), '');
-+
-+    const purity = await fetch(`${origin}/api/purity`, {
-+      headers: { 'CF-Connecting-IP': '216.40.85.151' }
-+    }).then(response => response.json());
-+    assert.equal(purity.riskScore, 46);
-+    assert.equal(purity.level, '轻度风险');
-+    assert.equal(purity.networkType, '机房 / 云服务');
-+
-+    const purityFragment = await fetch(`${origin}/purity`, {
-+      headers: { 'CF-Connecting-IP': '216.40.85.151' }
-+    }).then(response => response.text());
-+    assert.match(purityFragment, /风险系数/);
-+    assert.match(purityFragment, /轻度风险/);
-+    assert.match(purityFragment, /纯净度/);
+     const purityFragment = await fetch(`${origin}/purity`, {
+       headers: { 'CF-Connecting-IP': '216.40.85.151' }
+@@ -83,6 +85,9 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
+     assert.match(purityFragment, /风险系数/);
+     assert.match(purityFragment, /轻度风险/);
+     assert.match(purityFragment, /纯净度/);
++    assert.match(purityFragment, /人机流量比/);
++    assert.match(purityFragment, /human 54\.00%/);
++    assert.match(purityFragment, /bot 46\.00%/);
    });
  });
  
 diff --git a/tests/purity.test.mjs b/tests/purity.test.mjs
-new file mode 100644
-index 0000000..0b2e010
---- /dev/null
+index 0b2e010..e91691e 100644
+--- a/tests/purity.test.mjs
 +++ b/tests/purity.test.mjs
-@@ -0,0 +1,50 @@
-+import test from 'node:test';
-+import assert from 'node:assert/strict';
-+import { analyzeIpPurity, createPurityService } from '../src/purity.js';
-+
-+test('known hosting ASN produces the expected light-risk score', () => {
-+  const result = analyzeIpPurity({
-+    ip: '216.40.85.151',
-+    geo: { asn: 1054, provider: 'Zont LLC', countryCode: 'US' },
-+    hostname: 'customer.zont.io'
-+  });
-+
-+  assert.equal(result.riskScore, 42);
-+  assert.equal(result.purityScore, 58);
-+  assert.equal(result.level, '轻度风险');
-+  assert.equal(result.networkType, '机房 / 云服务');
-+});
-+
-+test('residential and anonymizer signals affect score in opposite directions', () => {
-+  const residential = analyzeIpPurity({
-+    ip: '1.1.1.1',
-+    geo: { asn: 64500, provider: 'Example Broadband Communications', countryCode: 'US' },
-+    hostname: 'pool-1-1-1-1.dynamic.example.net'
-+  });
-+  const proxy = analyzeIpPurity({
-+    ip: '2.2.2.2',
-+    geo: { asn: 64501, provider: 'Example VPN Proxy', countryCode: 'NL' },
-+    hostname: 'tor-exit.example.net'
-+  });
-+
-+  assert.equal(residential.riskScore, 0);
-+  assert.equal(residential.level, '纯净');
-+  assert.ok(proxy.riskScore >= 65);
-+  assert.equal(proxy.networkType, '匿名代理');
-+});
-+
-+test('purity service de-duplicates and caches reverse DNS lookups', async () => {
-+  let calls = 0;
-+  const service = createPurityService({
-+    hostnameLookup: async () => { calls += 1; return 'host.example.net'; },
-+    ttlMs: 60_000
-+  });
-+  const geo = { asn: 64500, provider: 'Example Broadband', countryCode: 'US' };
-+  const [first, second] = await Promise.all([
-+    service.lookup('1.1.1.1', geo),
-+    service.lookup('1.1.1.1', geo)
-+  ]);
-+
-+  assert.equal(calls, 1);
-+  assert.deepEqual(first, second);
-+});
+@@ -11,6 +11,8 @@ test('known hosting ASN produces the expected light-risk score', () => {
+ 
+   assert.equal(result.riskScore, 42);
+   assert.equal(result.purityScore, 58);
++  assert.equal(result.humanTraffic, 58);
++  assert.equal(result.botTraffic, 42);
+   assert.equal(result.level, '轻度风险');
+   assert.equal(result.networkType, '机房 / 云服务');
+ });
+@@ -28,6 +30,8 @@ test('residential and anonymizer signals affect score in opposite directions', (
+   });
+ 
+   assert.equal(residential.riskScore, 0);
++  assert.equal(residential.humanTraffic, 100);
++  assert.equal(residential.botTraffic, 0);
+   assert.equal(residential.level, '纯净');
+   assert.ok(proxy.riskScore >= 65);
+   assert.equal(proxy.networkType, '匿名代理');

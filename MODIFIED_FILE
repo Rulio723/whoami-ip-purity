@@ -33,7 +33,8 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
   if (!net.isIP(ip || '')) {
     return {
       ip: ip || '', riskScore: 100, purityScore: 0, level: '无法评估', levelKey: 'unknown',
-      summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '', factors: []
+      summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '',
+      humanTraffic: 0, botTraffic: 100, factors: []
     };
   }
 
@@ -97,6 +98,8 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
     ip,
     riskScore: score,
     purityScore: 100 - score,
+    humanTraffic: Number((100 - score).toFixed(2)),
+    botTraffic: Number(score.toFixed(2)),
     level: classification.label,
     levelKey: classification.key,
     summary: classification.summary,

@@ -76,6 +76,8 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.equal(purity.riskScore, 46);
     assert.equal(purity.level, '轻度风险');
     assert.equal(purity.networkType, '机房 / 云服务');
+    assert.equal(purity.humanTraffic, 54);
+    assert.equal(purity.botTraffic, 46);
 
     const purityFragment = await fetch(`${origin}/purity`, {
       headers: { 'CF-Connecting-IP': '216.40.85.151' }
@@ -83,6 +85,9 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.match(purityFragment, /风险系数/);
     assert.match(purityFragment, /轻度风险/);
     assert.match(purityFragment, /纯净度/);
+    assert.match(purityFragment, /人机流量比/);
+    assert.match(purityFragment, /human 54\.00%/);
+    assert.match(purityFragment, /bot 46\.00%/);
   });
 });
 

@@ -1,10 +1,9 @@
 VERIFIED: 2026-09-04 Asia/Shanghai
 CHANGED_BRANCH: codex/ip-purity
-CHANGED_FIELD: GET /purity and GET /api/purity; MaxMind ASN + provider category + bounded PTR -> explainable IP risk score, purity score, network type, confidence, and factors; asynchronous htmx rendering preserves first-paint speed.
-BASELINE_COMMIT: ded5a4b46f87360e3861025f21cdcf0bdf03a80f
-BASELINE_SRC_APP_SHA256: 987FD8E2411867BE720B738C755AFD336EF2100F966215D0028DC0BB18A6AB48
-MODIFIED_SRC_APP_SHA256: 3ECC33FF5978A282AC6AA0AA1EBC5450DE449CF2C83C6D4CA44A8100AF06F333
-PURITY_ENGINE_SHA256: AF82BD6C6E02F462A527ABDFB2BA3A8FDDEE2E080CC612169C4CDFA5C50FDA93
+CHANGED_FIELD: purity JSON/HTML now includes humanTraffic and botTraffic; the purity card renders a green/pink 人机流量比 progress bar with two-decimal labels and an explicit estimate source.
+BASELINE_COMMIT: 3637f41e3ff3a1156fe1422cedd3d0096ef8fb38
+BASELINE_PURITY_SHA256: 280B3957DB149442FF9A60F7D66387BBBAE8D5FEC4475F32FE8854263A5DE5D4
+MODIFIED_PURITY_SHA256: E63EFAAB7BC428982B51589E4EF5B9037C9BBB6958036D82B962210F7F4CFEAC
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -14,53 +13,30 @@ ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
 BASELINE
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: clean commit ded5a4b46f87360e3861025f21cdcf0bdf03a80f before IP purity edits
-LITERAL_OUTPUT/RESULT:
-public/assets/client-7p0n8xfD.js 110.56 kB | gzip 36.88 kB
-9 tests; pass 9; fail 0; duration_ms 425.6741
-Covered CF-Connecting-IP plain text, MaxMind SSR/API, Bot UA, bounded PTR, bundled City/ASN lookup.
+INPUT: clean commit 3637f41e3ff3a1156fe1422cedd3d0096ef8fb38 before traffic-ratio edits
+LITERAL_OUTPUT/RESULT: public/assets/client-7p0n8xfD.js 110.56 kB; tests 12; pass 12; fail 0; duration_ms 395.5071
 EXIT_STATUS: 0
 
 MODIFIED
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: codex/ip-purity working tree; known hosting ASN, residential provider/PTR, anonymizer provider/PTR, cache de-duplication, API and fragment fixtures
-LITERAL_OUTPUT/RESULT:
-public/assets/client-7p0n8xfD.js 110.56 kB | gzip 36.88 kB
-12 tests; pass 12; fail 0; duration_ms 348.0044
-Added passing cases: known hosting ASN produces light-risk score; residential and anonymizer signals move in opposite directions; purity service de-duplicates and caches PTR; /api/purity and /purity render score and factors.
+INPUT: traffic fields, API assertions, HTML ratio labels and residential/hosting fixtures
+LITERAL_OUTPUT/RESULT: public/assets/client-7p0n8xfD.js 110.56 kB; tests 12; pass 12; fail 0; duration_ms 306.2275
 EXIT_STATUS: 0
 
 DOCKER
-COMMAND: cd D:\Codex\IP; docker build --provenance=false -t whoami-whoami:ip-purity .
-INPUT: modified source and Dockerfile
-LITERAL_OUTPUT/RESULT:
-IMAGE_ID=sha256:cfdc07aabb1e772dd6eb2b2cb80e0abc7325a41ab5838da09f719f77e742b31a SIZE=126139030
-Docker build reran all 12 tests; pass 12; fail 0.
-EXIT_STATUS: 0
-
-RUNTIME
-COMMAND: docker run -d --name whoami-purity-test -p 127.0.0.1:3100:3000 -e DEV_IP_OVERRIDE=216.40.85.151 whoami-whoami:ip-purity; curl http://127.0.0.1:3100/healthz; curl http://127.0.0.1:3100/api/purity; curl http://127.0.0.1:3100/purity; docker rm -f whoami-purity-test
-INPUT: production image and reference IP 216.40.85.151
-LITERAL_OUTPUT/RESULT:
-{"status":"ok","database":"MaxMind GeoLite2 City + ASN"}
-{"ip":"216.40.85.151","riskScore":46,"purityScore":54,"level":"轻度风险","networkType":"机房 / 云服务","confidence":"高","hostname":""}
-HTML fragment contained 风险系数, 轻度风险, 纯净度, network factors and progress scale; container was removed.
+COMMAND: cd D:\Codex\IP; docker build --provenance=false -t whoami-whoami:traffic-mix .
+INPUT: modified source and production Dockerfile
+LITERAL_OUTPUT/RESULT: IMAGE_ID=sha256:8abc025c7da1319c99d7d453b4c030726b398c1bd2ff673b6e6bcd6943bb86f0 SIZE=126139392; image build reran 12 tests with pass 12, fail 0.
 EXIT_STATUS: 0
 
 VISUAL
-COMMAND: CDP Chrome opened http://127.0.0.1:3000/ and saved D:\Codex\IP\ip-purity-local.png
-INPUT: 216.40.85.151, Chrome 146, Windows viewport
-LITERAL_OUTPUT/RESULT:
-Rendered page showed the existing whoami layout plus IP 纯净度 card: 46/100, 轻度风险, 54% purity, color risk scale, network attributes and factors. DOM also contained browser fingerprint 6d0b13116f63c5d5a7295c235e805fda and timezone Asia/Shanghai.
+COMMAND: CDP Chrome opened http://127.0.0.1:3000/ with DEV_IP_OVERRIDE=216.40.85.151 and captured the rendered lower card.
+INPUT: riskScore=46, purityScore=54, Chrome 146
+LITERAL_OUTPUT/RESULT: 人机流量比 rendered as a green/pink bar with human 54.00% and bot 46.00%; the existing risk scale, factors, fingerprint and responsive card remained intact.
 EXIT_STATUS: 0
 
 ROLLBACK
-COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST_PURITY D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST_PURITY; npm ci; npm test
-INPUT: separate rollback directory; BASELINE_COMMIT=ded5a4b46f87360e3861025f21cdcf0bdf03a80f; main working tree remains modified
-LITERAL_OUTPUT/RESULT:
-restored /d/Codex/IP/ROLLBACK_TEST_PURITY from git commit ded5a4b46f87360e3861025f21cdcf0bdf03a80f
-added 97 packages, and audited 98 packages; found 0 vulnerabilities
-public/assets/client-7p0n8xfD.js 110.56 kB | gzip 36.88 kB
-9 tests; pass 9; fail 0; duration_ms 364.1599
-RESULT: rollback copy restored the prior site without GET /purity, GET /api/purity or the purity card. The active codex/ip-purity working tree retained the modified 12-test behavior.
+COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST_TRAFFIC D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST_TRAFFIC; npm ci; npm test
+INPUT: separate rollback directory; BASELINE_COMMIT=3637f41e3ff3a1156fe1422cedd3d0096ef8fb38; active working tree remains modified
+LITERAL_OUTPUT/RESULT: restored /d/Codex/IP/ROLLBACK_TEST_TRAFFIC from git commit 3637f41e3ff3a1156fe1422cedd3d0096ef8fb38; added 97 packages; baseline tests 12; pass 12; fail 0; duration_ms 373.3251. Restored behavior has no humanTraffic/botTraffic fields or ratio bar; active tree retains them.
 EXIT_STATUS: 0
