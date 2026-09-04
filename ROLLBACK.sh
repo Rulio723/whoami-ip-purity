@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASELINE_COMMIT="00789c96a3400b300e50e668b4dd2d330959d9da"
+BASELINE_COMMIT="5fc6c27ac69e020823fd6bb0f5b07dae8c41eb91"
 ROOT="${1:-$(pwd)}"
 cd "$ROOT"
 
@@ -17,4 +17,4 @@ git restore --source="$BASELINE_COMMIT" -- \
   tests/purity.test.mjs
 
 npm test
-printf 'ROLLBACK_OK baseline=%s privacy_toggle=absent ip_classification=absent\n' "$BASELINE_COMMIT"
+printf 'ROLLBACK_OK baseline=%s semantic_colors=absent single_pink_badge=restored\n' "$BASELINE_COMMIT"

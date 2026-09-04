@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { once } from 'node:events';
 import { createApp } from '../src/app.js';
 import { createMaxMindService } from '../src/maxmind.js';
+import { renderPurityPanel } from '../src/template.js';
 
 async function withServer(run) {
   const geoService = await createMaxMindService();
@@ -97,6 +98,8 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.match(purityFragment, /广播IP/);
     assert.match(purityFragment, /机房IP/);
     assert.match(purityFragment, /ip-classification-badge/);
+    assert.match(purityFragment, /ip-classification-badge--yellow/);
+    assert.match(purityFragment, /ip-classification-badge--orange/);
   });
 });
 
@@ -114,4 +117,21 @@ test('non-browser user agents are rendered as Bot like the source site', async (
     assert.doesNotMatch(html, />浏览器<\/dt>/);
     assert.doesNotMatch(html, />操作系统<\/dt>/);
   });
+});
+
+test('IP classification badges use the requested semantic colors', () => {
+  const base = {
+    levelKey: 'clean', riskScore: 0, purityScore: 100, humanTraffic: 100, botTraffic: 0,
+    level: '纯净', summary: '测试', networkType: '测试', confidence: '高', hostname: '', factors: []
+  };
+  const cases = [
+    ['原生IP', 'green'], ['住宅IP', 'green'],
+    ['广播IP', 'yellow'], ['商业宽带', 'yellow'],
+    ['机房IP', 'orange'], ['匿名代理', 'red'], ['未知', 'gray']
+  ];
+
+  for (const [label, tone] of cases) {
+    const html = renderPurityPanel({ ...base, ipSource: label, ipAttribute: label });
+    assert.match(html, new RegExp(`ip-classification-badge--${tone}[^>]*>${label}<`));
+  }
 });

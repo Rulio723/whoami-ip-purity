@@ -16,7 +16,17 @@ function row(label, value, html = false, privateValue = false) {
 }
 
 function badge(value) {
-  return `<span class="ip-classification-badge">${escapeHtml(value || '未知')}</span>`;
+  const label = value || '未知';
+  const tone = {
+    原生IP: 'green',
+    住宅IP: 'green',
+    广播IP: 'yellow',
+    商业宽带: 'yellow',
+    机房IP: 'orange',
+    匿名代理: 'red',
+    未知: 'gray'
+  }[label] || 'gray';
+  return `<span class="ip-classification-badge ip-classification-badge--${tone}">${escapeHtml(label)}</span>`;
 }
 
 function tab(iconClass, title, extra = '') {
