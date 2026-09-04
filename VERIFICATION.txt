@@ -34,3 +34,16 @@ INPUT: separate modified worktree; BASELINE_COMMIT=5fc6c27ac69e020823fd6bb0f5b07
 LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 450.5411; RESTORED_SEMANTIC_COLORS_PRESENT=False; RESTORED_SINGLE_PINK_BADGE_PRESENT=True; ACTIVE_SEMANTIC_COLORS_PRESENT=True
 EXIT_STATUS: 0
 RESTORED_BEHAVIOR/STATUS: rollback copy restored the previous single pink badge color; active working tree retains green/yellow/orange/red/gray semantic colors.
+
+DEPLOY
+COMMAND: git push github HEAD:main; docker build --provenance=false -t whoami-whoami:semantic-colors-7ea1470 .; docker save; scp to 82.156.156.65:39723; docker load; docker compose up -d --no-build --pull never
+INPUT: commit 7ea14704b232ceed616e0d4edd3d8b69f01a0c44; backup /www/backups/whoami-before-semantic-colors-20260904-7ea1470.tar.gz; rollback image whoami-whoami:before-semantic-colors-20260904-7ea1470
+LITERAL_OUTPUT/RESULT: image sha256:f4bc7da285d0eb6bebf09857f3b89219dff96667c8f1861e46bf74b7da46d593 size=126140211; Loaded image: whoami-whoami:latest; HEALTH_STATUS=healthy; whoami-whoami-1 Up (healthy); whoami-cloudflared-1 Up
+EXIT_STATUS: 0
+
+PUBLIC
+COMMAND: CDP open https://ip.rulio.sryze.cc/; evaluate computed styles
+INPUT: public default privacy-off page
+LITERAL_OUTPUT/RESULT: privacy=false; 广播IP background=rgb(250, 204, 21), class=ip-classification-badge--yellow; 机房IP background=rgb(251, 146, 60), class=ip-classification-badge--orange
+EXIT_STATUS: 0
+FINAL_STATUS: semantic badge colors are live; privacy remains disabled by default.
