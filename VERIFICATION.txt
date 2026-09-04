@@ -36,3 +36,16 @@ INPUT: separate modified worktree copied from D:\Codex\IP; BASELINE_COMMIT=00789
 LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 433.5445; ROLLBACK_OK baseline=00789c96a3400b300e50e668b4dd2d330959d9da privacy_toggle=absent ip_classification=absent; RESTORED_PRIVACY_TOGGLE_PRESENT=False; RESTORED_IP_CLASSIFICATION_PRESENT=False; ACTIVE_PRIVACY_TOGGLE_PRESENT=True; ACTIVE_IP_CLASSIFICATION_PRESENT=True
 EXIT_STATUS: 0
 RESTORED_BEHAVIOR/STATUS: rollback copy restored the prior UI/API without IP来源、IP属性 or privacy toggle; main working tree retains the new classification and privacy-mask behavior.
+
+DEPLOY
+COMMAND: docker build --provenance=false -t whoami-whoami:ip-classification-e7f86fb .; docker tag whoami-whoami:ip-classification-e7f86fb whoami-whoami:latest; docker save; scp to 82.156.156.65:39723; docker load; docker compose up -d --no-build --pull never
+INPUT: commit e7f86fbb07395f7396e84b16a9e7e8746bac71c1; backup /www/backups/whoami-before-ip-classification-20260904-e7f86fb.tar.gz; rollback image whoami-whoami:before-ip-classification-20260904-e7f86fb
+LITERAL_OUTPUT/RESULT: local image sha256:62e8a6d77328dd6d9349e4b4c529ba3561d30c564e4ef7e01008d0a383b37bc6 size=126140052; Loaded image: whoami-whoami:latest; HEALTH_STATUS=healthy; {"status":"ok","database":"MaxMind GeoLite2 City + ASN"}; whoami-whoami-1 Up (healthy), 127.0.0.1:3000->3000/tcp; whoami-cloudflared-1 Up
+EXIT_STATUS: 0
+
+PUBLIC
+COMMAND: CDP open https://ip.rulio.sryze.cc/ and https://github.com/Rulio723/whoami-ip-purity; evaluate rendered DOM
+INPUT: public Cloudflare Tunnel site and GitHub main after push 00789c9..e7f86fb
+LITERAL_OUTPUT/RESULT: site {"privacy":false,"label":"隐藏隐私","source":["广播IP","机房IP"],"apiLink":true}; GitHub {"commit":true,"readme":true,"privacy":true,"preview":true}
+EXIT_STATUS: 0
+RESTORED/FINAL_STATUS: public default privacy is off; the button enables masking; API and panel return IP来源=广播IP and IP属性=机房IP; GitHub README displays the masked preview.
