@@ -49,6 +49,8 @@ test('browser HTML is rendered from MaxMind City and ASN records', async () => {
     assert.match(html, /maple-mono-latin-700-italic-D7QxTey4\.woff2/);
     assert.match(html, /data-fingerprint=""/);
     assert.match(html, /:text="data\.fingerprint/);
+    assert.match(html, /IP 纯净度/);
+    assert.match(html, /hx-get="\/purity"/);
   });
 });
 
@@ -67,6 +69,20 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.equal(hostname.status, 200);
     assert.equal(hostname.headers.get('cache-control'), 'no-store');
     assert.equal(await hostname.text(), '');
+
+    const purity = await fetch(`${origin}/api/purity`, {
+      headers: { 'CF-Connecting-IP': '216.40.85.151' }
+    }).then(response => response.json());
+    assert.equal(purity.riskScore, 46);
+    assert.equal(purity.level, '轻度风险');
+    assert.equal(purity.networkType, '机房 / 云服务');
+
+    const purityFragment = await fetch(`${origin}/purity`, {
+      headers: { 'CF-Connecting-IP': '216.40.85.151' }
+    }).then(response => response.text());
+    assert.match(purityFragment, /风险系数/);
+    assert.match(purityFragment, /轻度风险/);
+    assert.match(purityFragment, /纯净度/);
   });
 });
 

@@ -1,6 +1,10 @@
-VERIFIED: 2026-09-02 Asia/Shanghai
-CHANGED_BRANCH: main; Node/Express GET /, GET /hostname, GET /api/info behind Cloudflare Tunnel; browser htmx hx-live hydration
-CHANGED_FIELD: CF-Connecting-IP -> MaxMind City/ASN SSR; IP -> bounded reverse DNS PTR; User-Agent -> Bot/browser rows; FingerprintJS visitorId/timezone -> hx-live bindings; source visual/SEO assets -> local build
+VERIFIED: 2026-09-04 Asia/Shanghai
+CHANGED_BRANCH: codex/ip-purity
+CHANGED_FIELD: GET /purity and GET /api/purity; MaxMind ASN + provider category + bounded PTR -> explainable IP risk score, purity score, network type, confidence, and factors; asynchronous htmx rendering preserves first-paint speed.
+BASELINE_COMMIT: ded5a4b46f87360e3861025f21cdcf0bdf03a80f
+BASELINE_SRC_APP_SHA256: 987FD8E2411867BE720B738C755AFD336EF2100F966215D0028DC0BB18A6AB48
+MODIFIED_SRC_APP_SHA256: 3ECC33FF5978A282AC6AA0AA1EBC5450DE449CF2C83C6D4CA44A8100AF06F333
+PURITY_ENGINE_SHA256: AF82BD6C6E02F462A527ABDFB2BA3A8FDDEE2E080CC612169C4CDFA5C50FDA93
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -8,239 +12,55 @@ DIFF_FILE: D:\Codex\IP\DIFF_FILE
 VERIFICATION.txt: D:\Codex\IP\VERIFICATION.txt
 ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
-SHA256:
-BASELINE src/app.js at 76c42002891b74cf1837f959e77c5e6b32192fa6 = 765C86351CF034F558750C90AA69B8A4BB73F86E917F69FED39557F9BC5C5350
-MODIFIED src/app.js = EE50884040C417666726AE2EA5131490ED945E9D136FA830E94EA16BBD855DAC
-MODIFIED_FILE = EE50884040C417666726AE2EA5131490ED945E9D136FA830E94EA16BBD855DAC
-DIFF_FILE = C5783853D8DA547D91A4C4719744BD4A6185F35911FB39929E2BE9C293C66426
-SOURCE_SCREENSHOT = 232D1D223ED63EB94120BEE43BBFB3599CE3DBEDEACBF70B7D5190A7FC8DA571
-LOCAL_SCREENSHOT = 232D1D223ED63EB94120BEE43BBFB3599CE3DBEDEACBF70B7D5190A7FC8DA571
-
 BASELINE
-COMMAND: cd D:\Codex\IP\BASELINE_TEST; npm test
-INPUT: detached worktree at commit 76c42002891b74cf1837f959e77c5e6b32192fa6; DEV_IP_OVERRIDE not set
-LITERAL_OUTPUT:
-
-> whoami-fingerprint-check@1.0.0 test
-> npm run build && node --test tests/*.test.mjs
-
-
-> whoami-fingerprint-check@1.0.0 build
-> node scripts/build.mjs
-
-vite v8.2.2 building client environment for production...
-transforming...
-✓ 5 modules transformed.
-rendering chunks...
-computing gzip size...
-public/assets/client-BZei1pOB.js  110.34 kB │ gzip: 36.80 kB
-
-✓ built in 70ms
-built browser assets in D:\Codex\IP\BASELINE_TEST\public\assets
-✔ curl receives CF-Connecting-IP as plain text (194.5171ms)
-✔ browser HTML is rendered from MaxMind City and ASN records (153.3409ms)
-✔ JSON API and health endpoint report MaxMind-backed state (81.4244ms)
-✔ bundled MaxMind databases exist and resolve the reference IP exactly (85.7809ms)
-✔ MaxMind lookup returns an unknown record instead of inventing a CIDR (62.9098ms)
-ℹ tests 5
-ℹ suites 0
-ℹ pass 5
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 752.2879
-
-RESULT: pre-update Node/Express + MaxMind implementation built successfully; 5 baseline tests passed, including plain-text IP, SSR, JSON/health, bundled database lookup, and unknown network behavior.
+COMMAND: cd D:\Codex\IP; npm test
+INPUT: clean commit ded5a4b46f87360e3861025f21cdcf0bdf03a80f before IP purity edits
+LITERAL_OUTPUT/RESULT:
+public/assets/client-7p0n8xfD.js 110.56 kB | gzip 36.88 kB
+9 tests; pass 9; fail 0; duration_ms 425.6741
+Covered CF-Connecting-IP plain text, MaxMind SSR/API, Bot UA, bounded PTR, bundled City/ASN lookup.
 EXIT_STATUS: 0
 
 MODIFIED
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: current working tree; CF-Connecting-IP and DEV_IP_OVERRIDE test fixtures include 216.40.85.151; Mozilla and non-browser User-Agent fixtures; mocked successful, failed, invalid, and timed-out reverse DNS
-LITERAL_OUTPUT:
-
-> whoami-fingerprint-check@1.0.0 test
-> npm run build && node --test tests/*.test.mjs
-
-
-> whoami-fingerprint-check@1.0.0 build
-> node scripts/build.mjs
-
-vite v8.2.2 building client environment for production...
-transforming...
-✓ 5 modules transformed.
-rendering chunks...
-computing gzip size...
-public/assets/client-7p0n8xfD.js  110.56 kB │ gzip: 36.88 kB
-
-✓ built in 42ms
-built browser assets in D:\Codex\IP\public\assets
-✔ curl receives CF-Connecting-IP as plain text (107.8361ms)
-✔ browser HTML is rendered from MaxMind City and ASN records (69.7457ms)
-✔ JSON API and health endpoint report MaxMind-backed state (92.8599ms)
-✔ non-browser user agents are rendered as Bot like the source site (75.5194ms)
-✔ reverse DNS returns the first hostname without a trailing dot (0.8271ms)
-✔ reverse DNS failures and invalid addresses return an empty response (3.9335ms)
-✔ reverse DNS is bounded by its timeout (11.3742ms)
-✔ bundled MaxMind databases exist and resolve the reference IP exactly (65.5533ms)
-✔ MaxMind lookup returns an unknown record instead of inventing a CIDR (64.4261ms)
-ℹ tests 9
-ℹ suites 0
-ℹ pass 9
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 575.6519
-
-RESULT: updated implementation built public/assets/client-7p0n8xfD.js; 9 tests passed, including Bot rendering and bounded reverse DNS behavior. MODIFIED_FILE byte-for-byte equals src/app.js.
+INPUT: codex/ip-purity working tree; known hosting ASN, residential provider/PTR, anonymizer provider/PTR, cache de-duplication, API and fragment fixtures
+LITERAL_OUTPUT/RESULT:
+public/assets/client-7p0n8xfD.js 110.56 kB | gzip 36.88 kB
+12 tests; pass 12; fail 0; duration_ms 348.0044
+Added passing cases: known hosting ASN produces light-risk score; residential and anonymizer signals move in opposite directions; purity service de-duplicates and caches PTR; /api/purity and /purity render score and factors.
 EXIT_STATUS: 0
 
-DOCKER_BUILD
-COMMAND: cd D:\Codex\IP; docker build --provenance=false -t whoami-maxmind:latest-source .; docker image inspect whoami-maxmind:latest-source --format 'IMAGE_ID={{.Id}} SIZE={{.Size}}'
-INPUT: current committed source tree, Dockerfile, .dockerignore, Node 22 build/runtime stages
-LITERAL_OUTPUT:
-#0 building with "desktop-linux" instance using docker driver
-
-#1 [internal] load build definition from Dockerfile
-#1 transferring dockerfile: 462B done
-#1 DONE 0.0s
-
-#2 [internal] load metadata for docker.io/library/node:22-bookworm-slim
-#2 DONE 0.4s
-
-#3 [internal] load .dockerignore
-#3 transferring context: 245B done
-#3 DONE 0.0s
-
-#4 [build 1/6] FROM docker.io/library/node:22-bookworm-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5
-#4 resolve docker.io/library/node:22-bookworm-slim@sha256:83f487e0a63425e5b4d146fb5e5be574bcbe1b7b843d3ebafdd95eaf7767a7e5 0.0s done
-#4 DONE 0.0s
-
-#5 [internal] load build context
-#5 transferring context: 6.90kB done
-#5 DONE 0.0s
-
-#6 [runtime 5/6] COPY --from=build /app/src ./src
-#6 CACHED
-
-#7 [build 2/6] WORKDIR /app
-#7 CACHED
-
-#8 [build 3/6] COPY package.json package-lock.json ./
-#8 CACHED
-
-#9 [runtime 4/6] RUN npm ci --omit=dev && npm cache clean --force
-#9 CACHED
-
-#10 [build 4/6] RUN npm ci
-#10 CACHED
-
-#11 [build 6/6] RUN npm test
-#11 CACHED
-
-#12 [build 5/6] COPY . .
-#12 CACHED
-
-#13 [runtime 6/6] COPY --from=build /app/public ./public
-#13 CACHED
-
-#14 exporting to image
-#14 exporting layers done
-#14 exporting manifest sha256:8ad17de14df2ed9b8035eae054d04dd8470045585475b21f2085329b8a9ab99b done
-#14 exporting config sha256:41f8cb268430af5d358524289e285eb0b1a315cbd72504a069a12c2657c7ae4a done
-#14 naming to docker.io/library/whoami-maxmind:latest-source done
-#14 unpacking to docker.io/library/whoami-maxmind:latest-source done
-#14 DONE 0.0s
-
-IMAGE_ID=sha256:8ad17de14df2ed9b8035eae054d04dd8470045585475b21f2085329b8a9ab99b SIZE=126135633
-
-RESULT: production image sha256:8ad17de14df2ed9b8035eae054d04dd8470045585475b21f2085329b8a9ab99b built successfully from the committed source tree.
+DOCKER
+COMMAND: cd D:\Codex\IP; docker build --provenance=false -t whoami-whoami:ip-purity .
+INPUT: modified source and Dockerfile
+LITERAL_OUTPUT/RESULT:
+IMAGE_ID=sha256:cfdc07aabb1e772dd6eb2b2cb80e0abc7325a41ab5838da09f719f77e742b31a SIZE=126139030
+Docker build reran all 12 tests; pass 12; fail 0.
 EXIT_STATUS: 0
 
-DOCKER_RUNTIME
-COMMAND: docker run -d --name whoami-latest -p 127.0.0.1:3100:3000 -e DEV_IP_OVERRIDE=216.40.85.151 whoami-maxmind:latest-source; curl http://127.0.0.1:3100/healthz; curl http://127.0.0.1:3100/; curl http://127.0.0.1:3100/api/info; curl http://127.0.0.1:3100/hostname; curl -H "User-Agent: Mozilla/5.0" -H "Accept: text/html" http://127.0.0.1:3100/; docker rm -f whoami-latest
-INPUT: image whoami-maxmind:latest-source = sha256:8ad17de14df2ed9b8035eae054d04dd8470045585475b21f2085329b8a9ab99b; DEV_IP_OVERRIDE=216.40.85.151
-LITERAL_OUTPUT:
-IMAGE_ID=sha256:8ad17de14df2ed9b8035eae054d04dd8470045585475b21f2085329b8a9ab99b
-CONTAINER_ID=912858d4df521393a2e966def1363d9550c8891c747c380dd91ad0c90bbf69d8
-HEALTH={"status":"ok","database":"MaxMind GeoLite2 City + ASN"}
-IP=216.40.85.151
-API={"ip":"216.40.85.151","city":"洛杉矶","postalCode":"90060","region":"加州","countryCode":"US","country":"美国","timezone":"America/Los_Angeles","latitude":34.0544,"longitude":-118.244,"accuracyRadius":20,"network":"216.40.84.0/22","asn":1054,"asnName":"ZONT-LLC","provider":"Zont LLC","browser":"","os":"","device":"Bot"}
-HOSTNAME_BYTES=0
-HTML_CHECKS={"openstreetmap":true,"hostname_hx":true,"logo":true,"og":true,"fingerprint":true}
-STATUS=whoami-latest|Up 2 seconds|127.0.0.1:3100->3000/tcp
-
-RESULT: production container served health, plain IP, MaxMind JSON, empty no-PTR hostname, and HTML containing OpenStreetMap, hostname htmx, logo, OG image, and fingerprint sections; test container was removed.
+RUNTIME
+COMMAND: docker run -d --name whoami-purity-test -p 127.0.0.1:3100:3000 -e DEV_IP_OVERRIDE=216.40.85.151 whoami-whoami:ip-purity; curl http://127.0.0.1:3100/healthz; curl http://127.0.0.1:3100/api/purity; curl http://127.0.0.1:3100/purity; docker rm -f whoami-purity-test
+INPUT: production image and reference IP 216.40.85.151
+LITERAL_OUTPUT/RESULT:
+{"status":"ok","database":"MaxMind GeoLite2 City + ASN"}
+{"ip":"216.40.85.151","riskScore":46,"purityScore":54,"level":"轻度风险","networkType":"机房 / 云服务","confidence":"高","hostname":""}
+HTML fragment contained 风险系数, 轻度风险, 纯净度, network factors and progress scale; container was removed.
 EXIT_STATUS: 0
 
-VISUAL_QA
-COMMAND: python -c "from PIL import Image,ImageChops; import numpy as np; a=Image.open(r'D:\Codex\IP\latest-source-final-2026-09-02.png').convert('RGB'); b=Image.open(r'D:\Codex\IP\latest-local-final-2026-09-02.png').convert('RGB'); d=ImageChops.difference(a,b); x=np.asarray(d); print('SIZE',a.size,b.size); print('MAX_DIFF',int(x.max())); print('DIFF_PIXELS',int(np.any(x!=0,axis=2).sum())); print('TOTAL_PIXELS',a.width*a.height); print('MATCH_PERCENT',100*(1-np.any(x!=0,axis=2).sum()/(a.width*a.height))); print('DIFF_BBOX',d.getbbox())"
-INPUT: latest source and local PNGs captured sequentially in the same Chrome target with identical viewport, DPR, browser state, IP, FingerprintJS ID, timezone, and empty hostname
-LITERAL_OUTPUT:
-SIZE (2560, 1159) (2560, 1159)
-MAX_DIFF 0
-DIFF_PIXELS 0
-TOTAL_PIXELS 2967040
-MATCH_PERCENT 100.0
-DIFF_BBOX None
-
-RESULT: all 2,967,040 pixels are identical; maximum channel difference is 0.
-EXIT_STATUS: 0
-
-DEPENDENCY_AUDIT
-COMMAND: cd D:\Codex\IP; npm audit --omit=dev
-INPUT: package-lock.json production dependency graph
-LITERAL_OUTPUT:
-found 0 vulnerabilities
-
-RESULT: npm reported zero known production dependency vulnerabilities.
-EXIT_STATUS: 0
-
-DIFF_REPLAY
-COMMAND: cd D:\Codex\IP\BASELINE_TEST; git apply --check --binary ..\DIFF_FILE
-INPUT: detached baseline worktree at 76c42002891b74cf1837f959e77c5e6b32192fa6 and D:\Codex\IP\DIFF_FILE
-LITERAL_OUTPUT:
-DIFF_APPLY_CHECK_EXIT=0
-RESULT: DIFF_FILE is a valid binary-capable patch against the preserved baseline.
+VISUAL
+COMMAND: CDP Chrome opened http://127.0.0.1:3000/ and saved D:\Codex\IP\ip-purity-local.png
+INPUT: 216.40.85.151, Chrome 146, Windows viewport
+LITERAL_OUTPUT/RESULT:
+Rendered page showed the existing whoami layout plus IP 纯净度 card: 46/100, 轻度风险, 54% purity, color risk scale, network attributes and factors. DOM also contained browser fingerprint 6d0b13116f63c5d5a7295c235e805fda and timezone Asia/Shanghai.
 EXIT_STATUS: 0
 
 ROLLBACK
-COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST; npm ci; npm test
-INPUT: separate directory D:\Codex\IP\ROLLBACK_TEST; default baseline commit 76c42002891b74cf1837f959e77c5e6b32192fa6; current D:\Codex\IP working tree remains modified
-LITERAL_OUTPUT:
-restored /d/Codex/IP/ROLLBACK_TEST from git commit 76c42002891b74cf1837f959e77c5e6b32192fa6
-
-
-> whoami-fingerprint-check@1.0.0 test
-> npm run build && node --test tests/*.test.mjs
-
-
-> whoami-fingerprint-check@1.0.0 build
-> node scripts/build.mjs
-
-vite v8.2.2 building client environment for production...
-transforming...
-✓ 5 modules transformed.
-rendering chunks...
-computing gzip size...
-public/assets/client-BZei1pOB.js  110.34 kB │ gzip: 36.80 kB
-
-✓ built in 42ms
-built browser assets in D:\Codex\IP\ROLLBACK_TEST\public\assets
-✔ curl receives CF-Connecting-IP as plain text (97.7326ms)
-✔ browser HTML is rendered from MaxMind City and ASN records (41.0636ms)
-✔ JSON API and health endpoint report MaxMind-backed state (43.6148ms)
-✔ bundled MaxMind databases exist and resolve the reference IP exactly (44.6571ms)
-✔ MaxMind lookup returns an unknown record instead of inventing a CIDR (48.7877ms)
-ℹ tests 5
-ℹ suites 0
-ℹ pass 5
-ℹ fail 0
-ℹ cancelled 0
-ℹ skipped 0
-ℹ todo 0
-ℹ duration_ms 347.4807
-
-RESULT: rollback restored the pre-update commit into the separate copy. The restored copy rebuilt client-BZei1pOB.js and passed its original 5 tests; it has no GET /hostname update, Bot-only UA rendering, new OSM/SEO/logo/italic-font synchronization, or new PTR tests. The main working tree remains on the modified behavior/status with 9 passing tests.
+COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST_PURITY D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST_PURITY; npm ci; npm test
+INPUT: separate rollback directory; BASELINE_COMMIT=ded5a4b46f87360e3861025f21cdcf0bdf03a80f; main working tree remains modified
+LITERAL_OUTPUT/RESULT:
+restored /d/Codex/IP/ROLLBACK_TEST_PURITY from git commit ded5a4b46f87360e3861025f21cdcf0bdf03a80f
+added 97 packages, and audited 98 packages; found 0 vulnerabilities
+public/assets/client-7p0n8xfD.js 110.56 kB | gzip 36.88 kB
+9 tests; pass 9; fail 0; duration_ms 364.1599
+RESULT: rollback copy restored the prior site without GET /purity, GET /api/purity or the purity card. The active codex/ip-purity working tree retained the modified 12-test behavior.
 EXIT_STATUS: 0

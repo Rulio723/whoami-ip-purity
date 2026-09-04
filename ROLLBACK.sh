@@ -3,7 +3,7 @@ set -euo pipefail
 
 target="${1:?usage: ROLLBACK.sh TARGET_DIRECTORY [REPOSITORY]}"
 repo="${2:-$(cd "$(dirname "$0")" && pwd)}"
-baseline="${BASELINE_COMMIT:-76c42002891b74cf1837f959e77c5e6b32192fa6}"
+baseline="${BASELINE_COMMIT:-ded5a4b46f87360e3861025f21cdcf0bdf03a80f}"
 target="$(mkdir -p "$target" && cd "$target" && pwd)"
 repo="$(cd "$repo" && pwd)"
 

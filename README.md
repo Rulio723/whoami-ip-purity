@@ -8,6 +8,8 @@
 
 2026-09-02 的源站更新也已同步：异步 `/hostname` 反向 DNS、OpenStreetMap 城市链接、`logo.svg`、Open Graph 图片与元数据、Maple Mono 700 Italic 字体、新版加载骨架，以及非浏览器 UA 的 `Bot` 显示。
 
+2026-09-04 增加 IP 纯净度检测：综合 MaxMind ASN、服务商分类和 PTR 反向 DNS 信号生成 0–100 风险系数、纯净度、网络属性、置信度和可解释风险因子。检测通过异步片段加载，不阻塞首屏，也不依赖第三方在线评分接口。
+
 同日最终核验使用相同 Chrome target、viewport、DPR 和浏览器状态依次截图，源站与本地渲染共 `2,967,040` 个像素，差异像素为 `0`；Node 测试为 `9/9` 通过，生产 Docker 镜像构建及容器端点验证通过。
 
 源站没有公开服务端源码，因此无法从外部证明它内部也使用 Node.js、Express 或同一种 MMDB 加载方式。本项目属于“公开行为和可观察前端栈一致、后端实现可独立部署”，不是声称拿到了源站私有后端源码。
@@ -72,6 +74,8 @@ npm start
 GET /             浏览器返回 HTML；curl 返回纯文本 IP
 GET /hostname     异步反向 DNS 主机名查询；无 PTR 时返回空文本
 GET /api/info     MaxMind 查询结果 JSON
+GET /api/purity   当前 IP 的纯净度、风险系数与风险因子 JSON
+GET /purity       页面异步加载的纯净度 HTML 片段
 GET /healthz      健康状态
 ```
 
@@ -140,6 +144,7 @@ src/app.js          Express 路由和响应头
 src/ip.js           CF-Connecting-IP 与 UA 解析
 src/hostname.js     有超时保护的反向 DNS 查询
 src/maxmind.js      City/ASN MMDB 加载与查询
+src/purity.js       IP 纯净度评分、解释因子与查询缓存
 src/template.js     与源站一致的服务端 HTML
 client.js           htmx/hx-live + FingerprintJS
 scripts/build.mjs   浏览器资源构建与内容哈希缓存
