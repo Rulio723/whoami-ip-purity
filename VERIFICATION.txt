@@ -1,9 +1,10 @@
 VERIFIED: 2026-09-04 Asia/Shanghai
 CHANGED_BRANCH: codex/ip-purity
-CHANGED_FIELD: purity JSON/HTML now includes humanTraffic and botTraffic; the purity card renders a green/pink 人机流量比 progress bar with two-decimal labels and an explicit estimate source.
-BASELINE_COMMIT: 3637f41e3ff3a1156fe1422cedd3d0096ef8fb38
-BASELINE_PURITY_SHA256: 280B3957DB149442FF9A60F7D66387BBBAE8D5FEC4475F32FE8854263A5DE5D4
-MODIFIED_PURITY_SHA256: E63EFAAB7BC428982B51589E4EF5B9037C9BBB6958036D82B962210F7F4CFEAC
+CHANGED_FIELD: GitHub publication package; README expanded with features, architecture, local installation, Docker, Baota, free Cloudflare Tunnel, cache rules, API, scoring, testing, troubleshooting, privacy and project layout; MIT LICENSE and docs/preview.png added.
+BASELINE_COMMIT: fe56160210defb63043f1cc5758db1e7deba60d6
+TARGET_REPOSITORY: https://github.com/Rulio723/whoami-ip-purity
+BASELINE_README_SHA256: 45C8E6DF0BFF30E0D59232639400DB898A3E6760CB618F931664ADCF7296389C
+MODIFIED_README_SHA256: 4E5B509CE5776808350958D7039E97CEBE59642844ECEF0B352BDE038156B4C8
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -13,30 +14,18 @@ ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
 BASELINE
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: clean commit 3637f41e3ff3a1156fe1422cedd3d0096ef8fb38 before traffic-ratio edits
-LITERAL_OUTPUT/RESULT: public/assets/client-7p0n8xfD.js 110.56 kB; tests 12; pass 12; fail 0; duration_ms 395.5071
+INPUT: clean commit fe56160210defb63043f1cc5758db1e7deba60d6 before GitHub documentation changes
+LITERAL_OUTPUT/RESULT: public/assets/client-7p0n8xfD.js 110.56 kB; tests 12; pass 12; fail 0. Application behavior was healthy before documentation packaging.
 EXIT_STATUS: 0
 
 MODIFIED
-COMMAND: cd D:\Codex\IP; npm test
-INPUT: traffic fields, API assertions, HTML ratio labels and residential/hosting fixtures
-LITERAL_OUTPUT/RESULT: public/assets/client-7p0n8xfD.js 110.56 kB; tests 12; pass 12; fail 0; duration_ms 306.2275
-EXIT_STATUS: 0
-
-DOCKER
-COMMAND: cd D:\Codex\IP; docker build --provenance=false -t whoami-whoami:traffic-mix .
-INPUT: modified source and production Dockerfile
-LITERAL_OUTPUT/RESULT: IMAGE_ID=sha256:8abc025c7da1319c99d7d453b4c030726b398c1bd2ff673b6e6bcd6943bb86f0 SIZE=126139392; image build reran 12 tests with pass 12, fail 0.
-EXIT_STATUS: 0
-
-VISUAL
-COMMAND: CDP Chrome opened http://127.0.0.1:3000/ with DEV_IP_OVERRIDE=216.40.85.151 and captured the rendered lower card.
-INPUT: riskScore=46, purityScore=54, Chrome 146
-LITERAL_OUTPUT/RESULT: 人机流量比 rendered as a green/pink bar with human 54.00% and bot 46.00%; the existing risk scale, factors, fingerprint and responsive card remained intact.
+COMMAND: cd D:\Codex\IP; npm test; validate README.md sections, code-fence balance, LICENSE and docs/preview.png
+INPUT: 517-line Chinese README, MIT license and 900x1550 preview image
+LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 367.6845; README_OK lines=517 preview_bytes=87787. Required sections 功能特色, 快速开始, 宝塔面板部署, Cloudflare Tunnel 免费部署, 纯净度计算说明, 故障排查 and License were present.
 EXIT_STATUS: 0
 
 ROLLBACK
-COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST_TRAFFIC D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST_TRAFFIC; npm ci; npm test
-INPUT: separate rollback directory; BASELINE_COMMIT=3637f41e3ff3a1156fe1422cedd3d0096ef8fb38; active working tree remains modified
-LITERAL_OUTPUT/RESULT: restored /d/Codex/IP/ROLLBACK_TEST_TRAFFIC from git commit 3637f41e3ff3a1156fe1422cedd3d0096ef8fb38; added 97 packages; baseline tests 12; pass 12; fail 0; duration_ms 373.3251. Restored behavior has no humanTraffic/botTraffic fields or ratio bar; active tree retains them.
+COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST_GITHUB D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST_GITHUB; npm ci --offline; npm test
+INPUT: separate rollback directory; BASELINE_COMMIT=fe56160210defb63043f1cc5758db1e7deba60d6; active working tree remains modified
+LITERAL_OUTPUT/RESULT: restored /d/Codex/IP/ROLLBACK_TEST_GITHUB from git commit fe56160210defb63043f1cc5758db1e7deba60d6; added 97 packages; found 0 vulnerabilities; tests 12; pass 12; fail 0; duration_ms 382.4398. Restored copy contains the previous README and no new LICENSE/preview publication files; active tree retains them.
 EXIT_STATUS: 0
