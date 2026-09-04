@@ -51,6 +51,8 @@ test('browser HTML is rendered from MaxMind City and ASN records', async () => {
     assert.match(html, /:text="data\.fingerprint/);
     assert.match(html, /IP 纯净度/);
     assert.match(html, /hx-get="\/purity"/);
+    assert.match(html, /data-privacy-toggle/);
+    assert.match(html, /data-private/);
   });
 });
 
@@ -76,6 +78,8 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.equal(purity.riskScore, 46);
     assert.equal(purity.level, '轻度风险');
     assert.equal(purity.networkType, '机房 / 云服务');
+    assert.equal(purity.ipSource, '广播IP');
+    assert.equal(purity.ipAttribute, '机房IP');
     assert.equal(purity.humanTraffic, 54);
     assert.equal(purity.botTraffic, 46);
 
@@ -88,6 +92,11 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.match(purityFragment, /人机流量比/);
     assert.match(purityFragment, /human 54\.00%/);
     assert.match(purityFragment, /bot 46\.00%/);
+    assert.match(purityFragment, /IP来源/);
+    assert.match(purityFragment, /IP属性/);
+    assert.match(purityFragment, /广播IP/);
+    assert.match(purityFragment, /机房IP/);
+    assert.match(purityFragment, /ip-classification-badge/);
   });
 });
 

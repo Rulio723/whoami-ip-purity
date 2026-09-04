@@ -1,10 +1,10 @@
 VERIFIED: 2026-09-04 Asia/Shanghai
 CHANGED_BRANCH: codex/ip-purity
-CHANGED_FIELD: GitHub publication package; README expanded with features, architecture, local installation, Docker, Baota, free Cloudflare Tunnel, cache rules, API, scoring, testing, troubleshooting, privacy and project layout; MIT LICENSE and docs/preview.png added.
-BASELINE_COMMIT: fe56160210defb63043f1cc5758db1e7deba60d6
-TARGET_REPOSITORY: https://github.com/Rulio723/whoami-ip-purity
-BASELINE_README_SHA256: 45C8E6DF0BFF30E0D59232639400DB898A3E6760CB618F931664ADCF7296389C
-MODIFIED_README_SHA256: 4E5B509CE5776808350958D7039E97CEBE59642844ECEF0B352BDE038156B4C8
+CHANGED_FIELD: IP来源/IP属性动态分类；默认关闭的一键隐私打码；README 预览图的 IP、位置、网络、请求、PTR 与浏览器指纹已打码。
+BASELINE_COMMIT: 00789c96a3400b300e50e668b4dd2d330959d9da
+REFERENCE_RESULT: 216.40.85.151 => ipSource=广播IP; ipAttribute=机房IP
+DEFAULT_PRIVACY: false
+FORCED_PRIVACY_QUERY: ?privacy=1
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -14,18 +14,25 @@ ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
 BASELINE
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: clean commit fe56160210defb63043f1cc5758db1e7deba60d6 before GitHub documentation changes
-LITERAL_OUTPUT/RESULT: public/assets/client-7p0n8xfD.js 110.56 kB; tests 12; pass 12; fail 0. Application behavior was healthy before documentation packaging.
+INPUT: clean commit 00789c96a3400b300e50e668b4dd2d330959d9da
+LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 382.4141; public/assets/client-7p0n8xfD.js 110.56 kB gzip 36.88 kB
 EXIT_STATUS: 0
 
 MODIFIED
-COMMAND: cd D:\Codex\IP; npm test; validate README.md sections, code-fence balance, LICENSE and docs/preview.png
-INPUT: 517-line Chinese README, MIT license and 900x1550 preview image
-LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 367.6845; README_OK lines=517 preview_bytes=87787. Required sections 功能特色, 快速开始, 宝塔面板部署, Cloudflare Tunnel 免费部署, 纯净度计算说明, 故障排查 and License were present.
+COMMAND: cd D:\Codex\IP; npm test
+INPUT: src/purity.js and src/template.js classification fields; client.js privacy toggle defaults false; assets/main.css badges/masking; tests and masked docs/preview.png
+LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 506.4987; public/assets/client-BwHTE7Ge.js 111.00 kB gzip 37.08 kB
+EXIT_STATUS: 0
+
+BROWSER
+COMMAND: CDP navigate http://127.0.0.1:3124/; eval privacy state; click [data-privacy-toggle]; eval blur
+INPUT: DEV_IP_OVERRIDE=216.40.85.151; default URL without privacy query
+LITERAL_OUTPUT/RESULT: default {"privacy":false,"pressed":"false","label":"隐藏隐私","source":["广播IP","机房IP"]}; after click {"privacy":true,"pressed":"true","label":"显示隐私","blur":"blur(6.08px)"}
 EXIT_STATUS: 0
 
 ROLLBACK
-COMMAND: cd D:\Codex\IP; & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' ./ROLLBACK.sh ./ROLLBACK_TEST_GITHUB D:/Codex/IP; cd D:\Codex\IP\ROLLBACK_TEST_GITHUB; npm ci --offline; npm test
-INPUT: separate rollback directory; BASELINE_COMMIT=fe56160210defb63043f1cc5758db1e7deba60d6; active working tree remains modified
-LITERAL_OUTPUT/RESULT: restored /d/Codex/IP/ROLLBACK_TEST_GITHUB from git commit fe56160210defb63043f1cc5758db1e7deba60d6; added 97 packages; found 0 vulnerabilities; tests 12; pass 12; fail 0; duration_ms 382.4398. Restored copy contains the previous README and no new LICENSE/preview publication files; active tree retains them.
+COMMAND: & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' 'D:/Codex/IP-rollback-verify-20260904a/ROLLBACK.sh' 'D:/Codex/IP-rollback-verify-20260904a'
+INPUT: separate modified worktree copied from D:\Codex\IP; BASELINE_COMMIT=00789c96a3400b300e50e668b4dd2d330959d9da
+LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 433.5445; ROLLBACK_OK baseline=00789c96a3400b300e50e668b4dd2d330959d9da privacy_toggle=absent ip_classification=absent; RESTORED_PRIVACY_TOGGLE_PRESENT=False; RESTORED_IP_CLASSIFICATION_PRESENT=False; ACTIVE_PRIVACY_TOGGLE_PRESENT=True; ACTIVE_IP_CLASSIFICATION_PRESENT=True
 EXIT_STATUS: 0
+RESTORED_BEHAVIOR/STATUS: rollback copy restored the prior UI/API without IP来源、IP属性 or privacy toggle; main working tree retains the new classification and privacy-mask behavior.

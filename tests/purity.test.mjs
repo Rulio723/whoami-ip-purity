@@ -15,6 +15,8 @@ test('known hosting ASN produces the expected light-risk score', () => {
   assert.equal(result.botTraffic, 42);
   assert.equal(result.level, '轻度风险');
   assert.equal(result.networkType, '机房 / 云服务');
+  assert.equal(result.ipSource, '广播IP');
+  assert.equal(result.ipAttribute, '机房IP');
 });
 
 test('residential and anonymizer signals affect score in opposite directions', () => {
@@ -33,8 +35,12 @@ test('residential and anonymizer signals affect score in opposite directions', (
   assert.equal(residential.humanTraffic, 100);
   assert.equal(residential.botTraffic, 0);
   assert.equal(residential.level, '纯净');
+  assert.equal(residential.ipSource, '原生IP');
+  assert.equal(residential.ipAttribute, '住宅IP');
   assert.ok(proxy.riskScore >= 65);
   assert.equal(proxy.networkType, '匿名代理');
+  assert.equal(proxy.ipSource, '广播IP');
+  assert.equal(proxy.ipAttribute, '匿名代理');
 });
 
 test('purity service de-duplicates and caches reverse DNS lookups', async () => {

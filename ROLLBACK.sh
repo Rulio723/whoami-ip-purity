@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-target="${1:?usage: ROLLBACK.sh TARGET_DIRECTORY [REPOSITORY]}"
-repo="${2:-$(cd "$(dirname "$0")" && pwd)}"
-baseline="${BASELINE_COMMIT:-fe56160210defb63043f1cc5758db1e7deba60d6}"
-target="$(mkdir -p "$target" && cd "$target" && pwd)"
-repo="$(cd "$repo" && pwd)"
+BASELINE_COMMIT="00789c96a3400b300e50e668b4dd2d330959d9da"
+ROOT="${1:-$(pwd)}"
+cd "$ROOT"
 
-case "$target" in
-  /|"$repo")
-    printf 'invalid rollback target: %s\n' "$target" >&2
-    exit 2
-    ;;
-esac
+git cat-file -e "${BASELINE_COMMIT}^{commit}"
+git restore --source="$BASELINE_COMMIT" -- \
+  README.md \
+  assets/main.css \
+  client.js \
+  docs/preview.png \
+  src/purity.js \
+  src/template.js \
+  tests/app.test.mjs \
+  tests/purity.test.mjs
 
-git -C "$repo" cat-file -e "${baseline}^{commit}"
-find "$target" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
-git -C "$repo" archive "$baseline" | tar -x -C "$target"
-printf 'restored %s from git commit %s\n' "$target" "$(git -C "$repo" rev-parse "$baseline")"
+npm test
+printf 'ROLLBACK_OK baseline=%s privacy_toggle=absent ip_classification=absent\n' "$BASELINE_COMMIT"

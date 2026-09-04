@@ -29,12 +29,25 @@ function factor(label, value, weight, detail) {
   return { label, value, weight, detail };
 }
 
+function describeIp(networkType) {
+  if (networkType === '住宅 / 运营商') {
+    return { ipSource: '原生IP', ipAttribute: '住宅IP' };
+  }
+  if (networkType === '机房 / 云服务') {
+    return { ipSource: '广播IP', ipAttribute: '机房IP' };
+  }
+  if (networkType === '匿名代理') {
+    return { ipSource: '广播IP', ipAttribute: '匿名代理' };
+  }
+  return { ipSource: '广播IP', ipAttribute: '商业宽带' };
+}
+
 export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
   if (!net.isIP(ip || '')) {
     return {
       ip: ip || '', riskScore: 100, purityScore: 0, level: '无法评估', levelKey: 'unknown',
       summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '',
-      humanTraffic: 0, botTraffic: 100, factors: []
+      ipSource: '未知', ipAttribute: '未知', humanTraffic: 0, botTraffic: 100, factors: []
     };
   }
 
@@ -92,6 +105,7 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
 
   score = clamp(score);
   const classification = classify(score);
+  const ipDescription = describeIp(networkType);
   const evidenceCount = [asn, provider, normalizedHostname, geo.countryCode].filter(Boolean).length;
 
   return {
@@ -104,6 +118,7 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
     levelKey: classification.key,
     summary: classification.summary,
     networkType,
+    ...ipDescription,
     confidence: evidenceCount >= 3 ? '高' : evidenceCount === 2 ? '中' : '低',
     hostname: normalizedHostname,
     factors

@@ -6,9 +6,21 @@ globalThis.htmx = htmx;
 
 const { q } = htmx.live;
 const browserSection = document.querySelector('#browser');
+const privacyToggle = document.querySelector('[data-privacy-toggle]');
 const zoneTime = timezone => timezone
   ? new Intl.DateTimeFormat(document.documentElement.lang, { timeStyle: 'short', timeZone: timezone }).format()
   : null;
+
+function setPrivacyMasked(masked) {
+  document.body.classList.toggle('privacy-masked', masked);
+  privacyToggle?.setAttribute('aria-pressed', String(masked));
+  const label = privacyToggle?.querySelector('[data-privacy-label]');
+  if (label) label.textContent = masked ? '显示隐私' : '隐藏隐私';
+}
+
+const forcedPrivacy = new URLSearchParams(location.search).get('privacy');
+setPrivacyMasked(forcedPrivacy === '1');
+privacyToggle?.addEventListener('click', () => setPrivacyMasked(!document.body.classList.contains('privacy-masked')));
 
 htmx.registerExtension('zone-time', {
   htmx_scope: (_element, context) => {

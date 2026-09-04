@@ -29,3 +29,8 @@
 .traffic-legend{display:flex;justify-content:space-between;margin-top:.35rem;font-family:var(--font-mono);font-size:.75rem}
 .traffic-legend span:first-child{color:#16a36a}
 .traffic-legend span:last-child{color:#f43f68}
+.ip-classification-badge{display:inline-flex;align-items:center;border-radius:.55rem;background:#fb7185;color:#fff;padding:.2rem .65rem;font-family:var(--font-sans);font-size:.78rem;font-weight:700;line-height:1.25}
+.privacy-toggle{display:flex;align-items:center;gap:.35rem;border:2px solid #000;border-radius:.75rem;background:#fff;padding:.35rem .65rem;color:#831843;font-size:.72rem;font-weight:700;box-shadow:3px 3px 0 #000;cursor:pointer}
+.privacy-toggle:hover{background:#fce7f3}
+.privacy-toggle:focus-visible{outline:3px solid #fb7185;outline-offset:3px}
+.privacy-masked [data-private]{filter:blur(.38rem);user-select:none;pointer-events:none}
