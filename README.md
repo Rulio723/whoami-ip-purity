@@ -27,7 +27,7 @@ WhoAmI Pure 是一个可自行部署的 IP 信息检测站。浏览器访问时�
 
 项目由 Cloudflare Tunnel 接收公网请求，通过 `CF-Connecting-IP` 获取真实客户端 IP；Node.js/Express 在服务端查询本地 MaxMind GeoLite2 City 与 ASN 数据库并渲染页面。浏览器端使用 htmx、hx-live 和 FingerprintJS 完成异步 PTR、纯净度与指纹展示。
 
-IP 纯净度由本地 ASN、服务商分类和 PTR 反向 DNS 信号计算，不依赖收费在线接口。人机流量比例是基于相同风险信号生成的**估算值**，不是第三方平台的真实全网流量统计。
+IP 纯净度由本地 ASN、服务商分类和 PTR 反向 DNS 信号计算。人机流量比例独立读取 Cloudflare Radar 对该 ASN 最近 7 天 HTML 请求的聚合统计，因此它不会与纯净度保持一致。
 
 ## 功能特色
 
@@ -37,7 +37,7 @@ IP 纯净度由本地 ASN、服务商分类和 PTR 反向 DNS 信号计算，不
 - **PTR 反向解析**：异步查询主机名，内置超时保护，不阻塞首屏。
 - **IP 纯净度**：输出 0–100 风险系数、纯净度、风险等级和解释因子。
 - **网络属性识别**：住宅/运营商、商业网络、机房/云服务及匿名代理。
-- **人机流量比**：绿色 `human` 与红色 `bot` 比例条，保留两位小数。
+- **ASN 人机流量比**：通过 Cloudflare Radar 获取最近 7 天 `human` 与 `bot` HTML 请求比例，保留两位小数。
 - **浏览器指纹**：FingerprintJS visitor ID、浏览器、系统、设备和时区。
 - **IP 来源与属性**：根据 ASN、服务商与 PTR 信号标注原生／广播 IP 及住宅／机房／代理属性。
 - **分类颜色**：原生／住宅为绿色，广播／商业宽带为黄色，机房为橙色，匿名代理为红色，未知为灰色。
@@ -138,6 +138,7 @@ cp .env.example .env
 | `TRUST_CF_CONNECTING_IP` | `true` | 是否信任 Cloudflare 真实 IP 请求头 |
 | `DEV_IP_OVERRIDE` | 空 | 开发环境固定查询 IP |
 | `CLOUDFLARE_TUNNEL_TOKEN` | 空 | Cloudflare Tunnel 令牌 |
+| `CLOUDFLARE_RADAR_API_TOKEN` | 空 | Cloudflare Radar 只读令牌，用于获取 ASN 最近 7 天人机流量比例 |
 | `MAXMIND_CITY_DB` | 内置数据库 | 自定义 City MMDB 路径 |
 | `MAXMIND_ASN_DB` | 内置数据库 | 自定义 ASN MMDB 路径 |
 
@@ -149,6 +150,7 @@ cp .env.example .env
 
 ```dotenv
 CLOUDFLARE_TUNNEL_TOKEN=替换为你的Tunnel令牌
+CLOUDFLARE_RADAR_API_TOKEN=替换为你的Radar只读令牌
 MAXMIND_CITY_DB=
 MAXMIND_ASN_DB=
 ```
@@ -218,6 +220,7 @@ nano .env
 
 ```dotenv
 CLOUDFLARE_TUNNEL_TOKEN=你的CloudflareTunnel令牌
+CLOUDFLARE_RADAR_API_TOKEN=你的Radar只读令牌
 ```
 
 限制权限：
@@ -300,6 +303,7 @@ cp .env.example .env
 
 ```dotenv
 CLOUDFLARE_TUNNEL_TOKEN=粘贴完整Token
+CLOUDFLARE_RADAR_API_TOKEN=粘贴Radar只读Token
 ```
 
 ### 4. 启动 Tunnel
@@ -367,8 +371,11 @@ curl https://ip.example.com
   "ip": "216.40.85.151",
   "riskScore": 46,
   "purityScore": 54,
-  "humanTraffic": 54,
-  "botTraffic": 46,
+  "humanTraffic": 52.54,
+  "botTraffic": 47.46,
+  "trafficAvailable": true,
+  "trafficSource": "Cloudflare Radar",
+  "trafficScope": "AS1054 · 最近7天",
   "level": "轻度风险",
   "networkType": "机房 / 云服务",
   "confidence": "高",
@@ -415,7 +422,15 @@ curl https://ip.example.com
 - PTR 主机名中的动态地址池、服务器和匿名网络特征
 - ASN 和注册国家信息是否完整
 
-`humanTraffic + botTraffic = 100`。当前人机比例从风险系数推导并在页面中标注为估算值，不应当作为广告结算、反欺诈封禁或司法判断的唯一依据。
+`humanTraffic + botTraffic = 100`。这组数据来自 Cloudflare Radar 的 ASN 级聚合结果，不是当前单个 IP 的流量统计；纯净度则是当前 IP 的本地启发式评分。两者数据源、对象和含义均不同，不应相等，也不应作为广告结算、反欺诈封禁或司法判断的唯一依据。
+
+使用人机流量比需要在 `.env` 配置只读 Radar Token：
+
+```dotenv
+CLOUDFLARE_RADAR_API_TOKEN=你的_Radar_Read_Token
+```
+
+未配置 Token、ASN 缺失或 Cloudflare Radar 暂无该 ASN 数据时，页面显示“暂无该 ASN 的 Cloudflare Radar 人机流量数据”，不会再使用纯净度伪造比例。
 
 ## MaxMind 数据库更新
 
@@ -469,7 +484,8 @@ src/app.js           Express 路由和响应头
 src/ip.js            真实 IP 与 User-Agent 解析
 src/hostname.js      有超时保护的 PTR 查询
 src/maxmind.js       MaxMind MMDB 加载和查询
-src/purity.js        IP 纯净度、人机比例和结果缓存
+src/purity.js        IP 纯净度启发式评分和结果缓存
+src/radar.js         Cloudflare Radar ASN 人机流量查询和缓存
 src/template.js      服务端 HTML 与纯净度片段
 scripts/build.mjs    Vite 和静态资源构建
 tests/               Node.js 自动化测试

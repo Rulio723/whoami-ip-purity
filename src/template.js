@@ -33,13 +33,23 @@ function tab(iconClass, title, extra = '') {
   return `<div class="flex items-center justify-between gap-3"><h2 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="iconify size-4 ${iconClass}" aria-hidden="true"></span> ${escapeHtml(title)}</h2>${extra}</div>`;
 }
 
+function renderTrafficMix(purity) {
+  if (!purity.trafficAvailable || !Number.isFinite(purity.humanTraffic) || !Number.isFinite(purity.botTraffic)) {
+    return `<div class="traffic-mix"><div class="traffic-mix-title"><span>ASN 人机流量比</span><small>${escapeHtml(purity.trafficSource || 'Cloudflare Radar')} · 最近7天</small></div><p class="traffic-unavailable">暂无该 ASN 的 Cloudflare Radar 人机流量数据</p></div>`;
+  }
+
+  const human = purity.humanTraffic.toFixed(2);
+  const bot = purity.botTraffic.toFixed(2);
+  return `<div class="traffic-mix"><div class="traffic-mix-title"><span>ASN 人机流量比</span><small>${escapeHtml(purity.trafficSource)} · ${escapeHtml(purity.trafficScope)}</small></div><progress class="traffic-progress" max="100" value="${escapeHtml(purity.humanTraffic)}" aria-label="Cloudflare Radar 统计：人类流量 ${escapeHtml(human)}%，机器人流量 ${escapeHtml(bot)}%"></progress><div class="traffic-legend"><span>human ${escapeHtml(human)}%</span><span>bot ${escapeHtml(bot)}%</span></div></div>`;
+}
+
 export function renderPurityPanel(purity) {
   const factorRows = purity.factors
     .filter(item => item.weight !== 0)
     .map(item => row(item.label, `${item.value}${item.weight > 0 ? ` (+${item.weight})` : ` (${item.weight})`}`))
     .join('');
 
-  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div><div class="traffic-mix"><div class="traffic-mix-title"><span>人机流量比</span><small>根据风险特征估算</small></div><progress class="traffic-progress" max="100" value="${escapeHtml(purity.humanTraffic)}" aria-label="预计人类流量 ${escapeHtml(purity.humanTraffic)}%，机器人流量 ${escapeHtml(purity.botTraffic)}%"></progress><div class="traffic-legend"><span>human ${escapeHtml(purity.humanTraffic.toFixed(2))}%</span><span>bot ${escapeHtml(purity.botTraffic.toFixed(2))}%</span></div></div><dl class="mt-5 space-y-2.5">${row('IP来源', badge(purity.ipSource), true)}${row('IP属性', badge(purity.ipAttribute), true)}${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录', false, true)}${factorRows}</dl><p class="purity-note">IP 来源与属性为 ASN、服务商及 PTR 信号的启发式判断；应用不会保存你的 IP。</p></div>`;
+  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div>${renderTrafficMix(purity)}<dl class="mt-5 space-y-2.5">${row('IP来源', badge(purity.ipSource), true)}${row('IP属性', badge(purity.ipAttribute), true)}${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录', false, true)}${factorRows}</dl><p class="purity-note">纯净度是当前 IP 的启发式评分；人机流量比是 Cloudflare Radar 对该 ASN 近 7 天 HTML 请求的独立统计。两者含义不同，不应相等。应用不会保存你的 IP。</p></div>`;
 }
 
 export function renderPage({ ip, geo, client }) {

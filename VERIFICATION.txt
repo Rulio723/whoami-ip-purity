@@ -1,8 +1,7 @@
-VERIFIED: 2026-09-04 Asia/Shanghai
+VERIFIED: 2026-09-05 Asia/Shanghai
 CHANGED_BRANCH: codex/ip-purity
-CHANGED_FIELD: IP 分类标签由统一粉色改为语义配色。
-BASELINE_COMMIT: 5fc6c27ac69e020823fd6bb0f5b07dae8c41eb91
-COLORS: 原生IP/住宅IP=#22C55E; 广播IP/商业宽带=#FACC15; 机房IP=#FB923C; 匿名代理=#EF4444; 未知=#94A3B8
+CHANGED_FIELD: 纯净度保持当前 IP 启发式评分；humanTraffic/botTraffic 改为 Cloudflare Radar 的 ASN 级最近 7 天 HTML 请求 BOT_CLASS 聚合统计，两组数据独立。
+BASELINE_COMMIT: f761ad9fecbf5be2add99837bd1fcb17f32e63e4
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -12,38 +11,31 @@ ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
 BASELINE
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: clean commit 5fc6c27ac69e020823fd6bb0f5b07dae8c41eb91 with one pink badge color
-LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 411.9457; public/assets/client-BwHTE7Ge.js 111.00 kB gzip 37.08 kB
+INPUT: clean commit f761ad9fecbf5be2add99837bd1fcb17f32e63e4; legacy traffic fields are derived directly from purity/risk scores
+LITERAL_OUTPUT/RESULT: ℹ tests 13; ℹ pass 13; ℹ fail 0; ℹ duration_ms 684.5066
 EXIT_STATUS: 0
 
 MODIFIED
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: semantic badge mapping in src/template.js; five CSS tones; exhaustive seven-label test; updated masked docs/preview.png
-LITERAL_OUTPUT/RESULT: tests 13; pass 13; fail 0; duration_ms 569.5108; public/assets/client-BwHTE7Ge.js 111.00 kB gzip 37.08 kB
+INPUT: independent src/radar.js service; app merges purity and Radar results; regression tests cover independence, caching, unavailable state, API and HTML rendering
+LITERAL_OUTPUT/RESULT: ℹ tests 15; ℹ pass 15; ℹ fail 0; ℹ duration_ms 374.5486
 EXIT_STATUS: 0
 
-BROWSER
-COMMAND: CDP open http://127.0.0.1:3124/?privacy=1; evaluate computed styles for .ip-classification-badge
-INPUT: DEV_IP_OVERRIDE=216.40.85.151
-LITERAL_OUTPUT/RESULT: 广播IP class=ip-classification-badge--yellow background=rgb(250, 204, 21) color=rgb(66, 32, 6); 机房IP class=ip-classification-badge--orange background=rgb(251, 146, 60) color=rgb(67, 20, 7)
+LOCAL_RUNTIME
+COMMAND: Invoke-RestMethod -Uri 'http://127.0.0.1:3124/api/purity' -Headers @{Accept='application/json'} -TimeoutSec 10
+INPUT: DEV_IP_OVERRIDE=103.100.111.235; CLOUDFLARE_RADAR_API_TOKEN=<REDACTED>; Radar query scope AS32043, dateRange=7d
+LITERAL_OUTPUT/RESULT: {"ip":"103.100.111.235","riskScore":7,"purityScore":93,"humanTraffic":53.279179,"botTraffic":46.720821,"trafficAvailable":true,"trafficSource":"Cloudflare Radar","trafficScope":"AS32043 · 最近7天","independent":true}
 EXIT_STATUS: 0
 
 ROLLBACK
-COMMAND: & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' 'D:/Codex/IP-rollback-color-20260904/ROLLBACK.sh' 'D:/Codex/IP-rollback-color-20260904'
-INPUT: separate modified worktree; BASELINE_COMMIT=5fc6c27ac69e020823fd6bb0f5b07dae8c41eb91
-LITERAL_OUTPUT/RESULT: tests 12; pass 12; fail 0; duration_ms 450.5411; RESTORED_SEMANTIC_COLORS_PRESENT=False; RESTORED_SINGLE_PINK_BADGE_PRESENT=True; ACTIVE_SEMANTIC_COLORS_PRESENT=True
+COMMAND: & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' './ROLLBACK.sh' 'D:/Codex/IP-RADAR-ROLLBACK'
+INPUT: separate modified worktree D:\Codex\IP-RADAR-ROLLBACK; BASELINE_COMMIT=f761ad9fecbf5be2add99837bd1fcb17f32e63e4
+LITERAL_OUTPUT/RESULT: ℹ tests 13; ℹ pass 13; ℹ fail 0; ℹ duration_ms 364.8105; RESTORED_BEHAVIOR humanTraffic=93 purityScore=93 botTraffic=7 riskScore=7; ROLLBACK_OK baseline=f761ad9fecbf5be2add99837bd1fcb17f32e63e4 traffic_mix=derived_from_purity restored_behavior=humanTraffic_equals_purityScore
 EXIT_STATUS: 0
-RESTORED_BEHAVIOR/STATUS: rollback copy restored the previous single pink badge color; active working tree retains green/yellow/orange/red/gray semantic colors.
+RESTORED_BEHAVIOR/STATUS: rollback copy removed src/radar.js and tests/radar.test.mjs and restored the legacy behavior where humanTraffic equals purityScore and botTraffic equals riskScore; active working tree retains independent Cloudflare Radar data.
 
 DEPLOY
-COMMAND: git push github HEAD:main; docker build --provenance=false -t whoami-whoami:semantic-colors-7ea1470 .; docker save; scp to 82.156.156.65:39723; docker load; docker compose up -d --no-build --pull never
-INPUT: commit 7ea14704b232ceed616e0d4edd3d8b69f01a0c44; backup /www/backups/whoami-before-semantic-colors-20260904-7ea1470.tar.gz; rollback image whoami-whoami:before-semantic-colors-20260904-7ea1470
-LITERAL_OUTPUT/RESULT: image sha256:f4bc7da285d0eb6bebf09857f3b89219dff96667c8f1861e46bf74b7da46d593 size=126140211; Loaded image: whoami-whoami:latest; HEALTH_STATUS=healthy; whoami-whoami-1 Up (healthy); whoami-cloudflared-1 Up
-EXIT_STATUS: 0
+STATUS: PENDING
 
 PUBLIC
-COMMAND: CDP open https://ip.rulio.sryze.cc/; evaluate computed styles
-INPUT: public default privacy-off page
-LITERAL_OUTPUT/RESULT: privacy=false; 广播IP background=rgb(250, 204, 21), class=ip-classification-badge--yellow; 机房IP background=rgb(251, 146, 60), class=ip-classification-badge--orange
-EXIT_STATUS: 0
-FINAL_STATUS: semantic badge colors are live; privacy remains disabled by default.
+STATUS: PENDING

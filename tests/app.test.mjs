@@ -7,7 +7,18 @@ import { renderPurityPanel } from '../src/template.js';
 
 async function withServer(run) {
   const geoService = await createMaxMindService();
-  const server = createApp({ geoService, hostnameLookup: async () => '' }).listen(0, '127.0.0.1');
+  const radarService = {
+    lookup: async asn => ({
+      humanTraffic: 52.54,
+      botTraffic: 47.46,
+      trafficAvailable: true,
+      trafficSource: 'Cloudflare Radar',
+      trafficScope: `AS${asn} · 最近7天`,
+      trafficUpdatedAt: '2026-09-05T06:30:00Z',
+      trafficReason: ''
+    })
+  };
+  const server = createApp({ geoService, hostnameLookup: async () => '', radarService }).listen(0, '127.0.0.1');
   await once(server, 'listening');
   const { port } = server.address();
   try {
@@ -81,8 +92,10 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.equal(purity.networkType, '机房 / 云服务');
     assert.equal(purity.ipSource, '广播IP');
     assert.equal(purity.ipAttribute, '机房IP');
-    assert.equal(purity.humanTraffic, 54);
-    assert.equal(purity.botTraffic, 46);
+    assert.equal(purity.humanTraffic, 52.54);
+    assert.equal(purity.botTraffic, 47.46);
+    assert.equal(purity.trafficSource, 'Cloudflare Radar');
+    assert.equal(purity.trafficScope, 'AS1054 · 最近7天');
 
     const purityFragment = await fetch(`${origin}/purity`, {
       headers: { 'CF-Connecting-IP': '216.40.85.151' }
@@ -90,9 +103,10 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
     assert.match(purityFragment, /风险系数/);
     assert.match(purityFragment, /轻度风险/);
     assert.match(purityFragment, /纯净度/);
-    assert.match(purityFragment, /人机流量比/);
-    assert.match(purityFragment, /human 54\.00%/);
-    assert.match(purityFragment, /bot 46\.00%/);
+    assert.match(purityFragment, /ASN 人机流量比/);
+    assert.match(purityFragment, /Cloudflare Radar/);
+    assert.match(purityFragment, /human 52\.54%/);
+    assert.match(purityFragment, /bot 47\.46%/);
     assert.match(purityFragment, /IP来源/);
     assert.match(purityFragment, /IP属性/);
     assert.match(purityFragment, /广播IP/);

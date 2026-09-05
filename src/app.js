@@ -4,14 +4,16 @@ import express from 'express';
 import { lookupHostname } from './hostname.js';
 import { detectClient, getClientIp } from './ip.js';
 import { createPurityService } from './purity.js';
+import { createRadarService } from './radar.js';
 import { renderPage, renderPurityPanel } from './template.js';
 
 const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
 
-export function createApp({ geoService, trustCloudflare = true, ipOverride = '', hostnameLookup = lookupHostname } = {}) {
+export function createApp({ geoService, trustCloudflare = true, ipOverride = '', hostnameLookup = lookupHostname, radarService } = {}) {
   if (!geoService) throw new Error('geoService is required');
   const app = express();
   const purityService = createPurityService({ hostnameLookup });
+  const trafficService = radarService || createRadarService({ apiToken: process.env.CLOUDFLARE_RADAR_API_TOKEN || '' });
   app.disable('x-powered-by');
   app.set('trust proxy', 1);
 
@@ -50,17 +52,23 @@ export function createApp({ geoService, trustCloudflare = true, ipOverride = '',
   app.get('/api/purity', async (request, response) => {
     const ip = ipOverride || getClientIp(request, { trustCloudflare });
     const geo = geoService.lookup(ip);
-    const purity = await purityService.lookup(ip, geo);
+    const [purity, traffic] = await Promise.all([
+      purityService.lookup(ip, geo),
+      trafficService.lookup(geo.asn)
+    ]);
     response.set('Cache-Control', 'private, no-store');
-    response.json({ ...purity, checkedAt: new Date().toISOString() });
+    response.json({ ...purity, ...traffic, checkedAt: new Date().toISOString() });
   });
 
   app.get('/purity', async (request, response) => {
     const ip = ipOverride || getClientIp(request, { trustCloudflare });
     const geo = geoService.lookup(ip);
-    const purity = await purityService.lookup(ip, geo);
+    const [purity, traffic] = await Promise.all([
+      purityService.lookup(ip, geo),
+      trafficService.lookup(geo.asn)
+    ]);
     response.set('Cache-Control', 'private, no-store');
-    response.type('html').send(renderPurityPanel(purity));
+    response.type('html').send(renderPurityPanel({ ...purity, ...traffic }));
   });
 
   app.get('/', (request, response) => {
