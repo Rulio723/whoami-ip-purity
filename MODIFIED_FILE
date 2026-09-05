@@ -1,8 +1,11 @@
 MODIFIED SNAPSHOT
 BRANCH: codex/ip-purity
 BASELINE_COMMIT: f761ad9fecbf5be2add99837bd1fcb17f32e63e4
+SOURCE_COMMIT: b78cdfa4244682daac3b8757c5d3bdd1af6c3db6
 CHANGED_FIELD: 纯净度仍为当前 IP 启发式评分；ASN 人机流量比改为独立读取 Cloudflare Radar 最近 7 天 BOT_CLASS 汇总，不再令 humanTraffic=purityScore、botTraffic=riskScore。
 LOCAL_VERIFIED_RESULT: ip=103.100.111.235 riskScore=7 purityScore=93 humanTraffic=53.279179 botTraffic=46.720821 trafficSource=Cloudflare Radar trafficScope=AS32043 · 最近7天 independent=true
+DEPLOYED_IMAGE: sha256:c985ad22b6e338538bccdf95083a721d9b881a2136529eeb94e9fc1aed3b3d5e
+PUBLIC_VERIFIED_RESULT: riskScore=46 purityScore=54 humanTraffic=56.898443 botTraffic=43.101557 trafficSource=Cloudflare Radar trafficScope=AS1054 · 最近7天 independent=true privacy=false overflow=0
 FILES:
 .env.example SHA256=AFF7E4C3C59ABB3BAAAB5FCC9B92BC32DB47E97F94C7398BC1B664201527AF7B
 README.md SHA256=59B3EA5BCF28CB440525F4C327DAB377EE00D06EA5AB2920F60F039EB8C6084B

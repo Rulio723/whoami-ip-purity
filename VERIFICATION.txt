@@ -2,6 +2,7 @@ VERIFIED: 2026-09-05 Asia/Shanghai
 CHANGED_BRANCH: codex/ip-purity
 CHANGED_FIELD: 纯净度保持当前 IP 启发式评分；humanTraffic/botTraffic 改为 Cloudflare Radar 的 ASN 级最近 7 天 HTML 请求 BOT_CLASS 聚合统计，两组数据独立。
 BASELINE_COMMIT: f761ad9fecbf5be2add99837bd1fcb17f32e63e4
+SOURCE_COMMIT: b78cdfa4244682daac3b8757c5d3bdd1af6c3db6
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -35,7 +36,14 @@ EXIT_STATUS: 0
 RESTORED_BEHAVIOR/STATUS: rollback copy removed src/radar.js and tests/radar.test.mjs and restored the legacy behavior where humanTraffic equals purityScore and botTraffic equals riskScore; active working tree retains independent Cloudflare Radar data.
 
 DEPLOY
-STATUS: PENDING
+COMMAND: docker build --provenance=false -t whoami-whoami:radar-b78cdfa -t whoami-whoami:latest .; docker save -o D:\Codex\IP\.deploy-whoami-radar-b78cdfa.tar whoami-whoami:latest whoami-whoami:radar-b78cdfa; git archive --format=tar.gz --output=D:\Codex\IP\.deploy-whoami-radar-b78cdfa-source.tar.gz b78cdfa4244682daac3b8757c5d3bdd1af6c3db6; scp -P 39723 artifacts root@82.156.156.65:/root/; ssh -p 39723 root@82.156.156.65 'docker load; atomic source replacement preserving .env and databases; docker compose up -d --no-build --pull never'
+INPUT: source commit b78cdfa4244682daac3b8757c5d3bdd1af6c3db6; image archive SHA256=41DE727A47F2FDE0380FD50824ACB103C8E0152D782036D5711D21509985C0DC; source archive SHA256=19531354CA247D23DDB06309EFB8B586B069252E147D4E6D36E51F8B73070695; Radar token transferred without printing its value; source backup /www/backups/whoami-before-radar-20260905-b78cdfa.tar.gz; rollback image whoami-whoami:before-radar-20260905-b78cdfa
+LITERAL_OUTPUT/RESULT: Loaded image: whoami-whoami:latest; Loaded image: whoami-whoami:radar-b78cdfa; DEPLOYED_IMAGE=sha256:c985ad22b6e338538bccdf95083a721d9b881a2136529eeb94e9fc1aed3b3d5e; RADAR_TOKEN_PRESENT=yes; HEALTH_STATUS=healthy; HEALTHZ={"status":"ok","database":"MaxMind GeoLite2 City + ASN"}; whoami-whoami-1 Up (healthy); whoami-cloudflared-1 Up
+EXIT_STATUS: 0
 
 PUBLIC
-STATUS: PENDING
+COMMAND: CDP open https://ip.rulio.sryze.cc/; evaluate DOM, /api/purity and responsive overflow; CDP open https://github.com/Rulio723/whoami-ip-purity; evaluate README markers
+INPUT: production site through Cloudflare Tunnel/CDN; default privacy setting; GitHub main after git push github HEAD:main
+LITERAL_OUTPUT/RESULT: title=我是谁？; privacy=false; traffic="ASN 人机流量比 | Cloudflare Radar · AS1054 · 最近7天 | human 56.90% | bot 43.10%"; API={"riskScore":46,"purityScore":54,"humanTraffic":56.898443,"botTraffic":43.101557,"trafficAvailable":true,"trafficSource":"Cloudflare Radar","trafficScope":"AS1054 · 最近7天","independent":true}; overflow=0; GitHub hasRadar=true hasEnv=true hasStructure=true commitLink=true
+EXIT_STATUS: 0
+FINAL_STATUS: Cloudflare Radar ASN traffic data is live and independent from current-IP purity; privacy remains disabled by default; desktop/mobile layout has zero horizontal overflow.
