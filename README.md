@@ -361,8 +361,10 @@ cf-cache-status: HIT
 - 其他请求：返回纯文本客户端 IP。
 
 ```bash
-curl https://ip.example.com
+curl -4 https://ip.example.com
 ```
+
+Cloudflare 免费版会为代理域名自动发布 IPv6 地址，且不能关闭 IPv6 兼容性。需要查询真实 IPv4 时请使用 `curl -4`；裸 `curl` 会按照客户端网络和 DNS 结果自动选择 IPv4 或 IPv6。
 
 ### `GET /api/info`
 
