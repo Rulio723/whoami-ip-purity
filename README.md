@@ -494,7 +494,7 @@ src/purity.js        IP 纯净度启发式评分和结果缓存
 src/radar.js         Cloudflare Radar ASN 人机流量查询和缓存
 src/template.js      服务端 HTML 与纯净度片段
 scripts/build.mjs    Vite 和静态资源构建
-tests/               Node.js 自动化测试
+tests/               Node.js 自动化测试（仅构建阶段，不进入运行镜像）
 Dockerfile           多阶段生产镜像
 compose.yaml         应用与 Cloudflare Tunnel
 ```
