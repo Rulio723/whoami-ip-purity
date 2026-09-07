@@ -1,35 +1,28 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASELINE_COMMIT="f761ad9fecbf5be2add99837bd1fcb17f32e63e4"
+BASELINE_COMMIT="c8ac29d21b621755e30b31a5c748c218fe95be99"
 ROOT="${1:-$(pwd)}"
 cd "$ROOT"
 
 git cat-file -e "${BASELINE_COMMIT}^{commit}"
 git restore --source="$BASELINE_COMMIT" -- \
-  .env.example \
   README.md \
-  assets/main.css \
-  compose.yaml \
-  src/app.js \
-  src/purity.js \
   src/template.js \
-  tests/app.test.mjs \
-  tests/purity.test.mjs
-
-rm -f -- src/radar.js tests/radar.test.mjs
+  tests/app.test.mjs
 
 npm test
 node --input-type=module - <<'NODE'
-import { analyzeIpPurity } from './src/purity.js';
+import { renderPage } from './src/template.js';
 
-const restored = analyzeIpPurity({
+const html = renderPage({
   ip: '103.100.111.235',
-  geo: { asn: 32043, provider: 'China Unicom', countryCode: 'CN' }
+  geo: {},
+  client: { browser: 'Chrome', os: 'Windows', device: 'Desktop' }
 });
-if (restored.humanTraffic !== restored.purityScore || restored.botTraffic !== restored.riskScore) {
-  throw new Error('rollback semantic verification failed');
+if (!html.includes('curl ip.rulio.sryze.cc') || html.includes('curl rulio.top')) {
+  throw new Error('rollback domain verification failed');
 }
-console.log(`RESTORED_BEHAVIOR humanTraffic=${restored.humanTraffic} purityScore=${restored.purityScore} botTraffic=${restored.botTraffic} riskScore=${restored.riskScore}`);
+console.log('RESTORED_BEHAVIOR footer="curl ip.rulio.sryze.cc" ogUrl="https://ip.rulio.sryze.cc/"');
 NODE
-printf 'ROLLBACK_OK baseline=%s traffic_mix=derived_from_purity restored_behavior=humanTraffic_equals_purityScore\n' "$BASELINE_COMMIT"
+printf 'ROLLBACK_OK baseline=%s primary_domain=ip.rulio.sryze.cc restored\n' "$BASELINE_COMMIT"

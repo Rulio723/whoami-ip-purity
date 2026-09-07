@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://ip.rulio.sryze.cc">在线演示</a> ·
+  <a href="https://rulio.top">在线演示</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#宝塔面板部署">宝塔部署</a> ·
   <a href="#cloudflare-tunnel-免费部署">Cloudflare Tunnel</a>
@@ -17,7 +17,7 @@
 ![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnel-F38020?logo=cloudflare&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
 
-> 在线站点：[https://ip.rulio.sryze.cc](https://ip.rulio.sryze.cc)
+> 在线站点：[https://rulio.top](https://rulio.top) / [https://www.rulio.top](https://www.rulio.top)
 
 ![WhoAmI Pure 预览](docs/preview.png)
 

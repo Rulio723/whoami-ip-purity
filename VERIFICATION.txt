@@ -1,8 +1,7 @@
-VERIFIED: 2026-09-05 Asia/Shanghai
+VERIFIED: 2026-09-07 Asia/Shanghai
 CHANGED_BRANCH: codex/ip-purity
-CHANGED_FIELD: 纯净度保持当前 IP 启发式评分；humanTraffic/botTraffic 改为 Cloudflare Radar 的 ASN 级最近 7 天 HTML 请求 BOT_CLASS 聚合统计，两组数据独立。
-BASELINE_COMMIT: f761ad9fecbf5be2add99837bd1fcb17f32e63e4
-SOURCE_COMMIT: b78cdfa4244682daac3b8757c5d3bdd1af6c3db6
+CHANGED_FIELD: 主域名改为 rulio.top；页脚显示 curl rulio.top；Open Graph 与 README 在线演示链接同步到 rulio.top / www.rulio.top。
+BASELINE_COMMIT: c8ac29d21b621755e30b31a5c748c218fe95be99
 
 ARTIFACTS:
 MODIFIED_FILE: D:\Codex\IP\MODIFIED_FILE
@@ -12,38 +11,31 @@ ROLLBACK.sh: D:\Codex\IP\ROLLBACK.sh
 
 BASELINE
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: clean commit f761ad9fecbf5be2add99837bd1fcb17f32e63e4; legacy traffic fields are derived directly from purity/risk scores
-LITERAL_OUTPUT/RESULT: ℹ tests 13; ℹ pass 13; ℹ fail 0; ℹ duration_ms 684.5066
+INPUT: clean commit c8ac29d21b621755e30b31a5c748c218fe95be99; footer="curl ip.rulio.sryze.cc"; og:url="https://ip.rulio.sryze.cc/"
+LITERAL_OUTPUT/RESULT: ℹ tests 15; ℹ pass 15; ℹ fail 0; ℹ duration_ms 472.9277
 EXIT_STATUS: 0
 
 MODIFIED
 COMMAND: cd D:\Codex\IP; npm test
-INPUT: independent src/radar.js service; app merges purity and Radar results; regression tests cover independence, caching, unavailable state, API and HTML rendering
-LITERAL_OUTPUT/RESULT: ℹ tests 15; ℹ pass 15; ℹ fail 0; ℹ duration_ms 374.5486
-EXIT_STATUS: 0
-
-LOCAL_RUNTIME
-COMMAND: Invoke-RestMethod -Uri 'http://127.0.0.1:3124/api/purity' -Headers @{Accept='application/json'} -TimeoutSec 10
-INPUT: DEV_IP_OVERRIDE=103.100.111.235; CLOUDFLARE_RADAR_API_TOKEN=<REDACTED>; Radar query scope AS32043, dateRange=7d
-LITERAL_OUTPUT/RESULT: {"ip":"103.100.111.235","riskScore":7,"purityScore":93,"humanTraffic":53.279179,"botTraffic":46.720821,"trafficAvailable":true,"trafficSource":"Cloudflare Radar","trafficScope":"AS32043 · 最近7天","independent":true}
+INPUT: footer="curl rulio.top"; og:url="https://rulio.top/"; README demo links use rulio.top and www.rulio.top; regression assertions reject old footer
+LITERAL_OUTPUT/RESULT: ℹ tests 15; ℹ pass 15; ℹ fail 0; ℹ duration_ms 403.4138
 EXIT_STATUS: 0
 
 ROLLBACK
-COMMAND: & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' './ROLLBACK.sh' 'D:/Codex/IP-RADAR-ROLLBACK'
-INPUT: separate modified worktree D:\Codex\IP-RADAR-ROLLBACK; BASELINE_COMMIT=f761ad9fecbf5be2add99837bd1fcb17f32e63e4
-LITERAL_OUTPUT/RESULT: ℹ tests 13; ℹ pass 13; ℹ fail 0; ℹ duration_ms 364.8105; RESTORED_BEHAVIOR humanTraffic=93 purityScore=93 botTraffic=7 riskScore=7; ROLLBACK_OK baseline=f761ad9fecbf5be2add99837bd1fcb17f32e63e4 traffic_mix=derived_from_purity restored_behavior=humanTraffic_equals_purityScore
+COMMAND: & 'D:\Codex\Centos 9\.tools\PortableGitReal\bin\bash.exe' './ROLLBACK.sh' 'D:/Codex/IP-ROLLBACK-DOMAIN-20260907'
+INPUT: separate modified worktree D:\Codex\IP-ROLLBACK-DOMAIN-20260907; BASELINE_COMMIT=c8ac29d21b621755e30b31a5c748c218fe95be99
+LITERAL_OUTPUT/RESULT: ℹ tests 15; ℹ pass 15; ℹ fail 0; ℹ duration_ms 447.7681; RESTORED_BEHAVIOR footer="curl ip.rulio.sryze.cc" ogUrl="https://ip.rulio.sryze.cc/"; ROLLBACK_OK baseline=c8ac29d21b621755e30b31a5c748c218fe95be99 primary_domain=ip.rulio.sryze.cc restored
 EXIT_STATUS: 0
-RESTORED_BEHAVIOR/STATUS: rollback copy removed src/radar.js and tests/radar.test.mjs and restored the legacy behavior where humanTraffic equals purityScore and botTraffic equals riskScore; active working tree retains independent Cloudflare Radar data.
+RESTORED_BEHAVIOR/STATUS: rollback copy restored the previous footer and Open Graph domain; active working tree retains rulio.top.
+
+CLOUDFLARE
+COMMAND: Cloudflare Dashboard CDP → tunnel whoami-baota → add published application routes for rulio.top and www.rulio.top → http://whoami:3000; replace existing apex A record 3.3.3.3 with proxied Tunnel record
+INPUT: zone rulio.top; tunnel e469c59c-a7a8-4770-be27-697760a873a7; DNS names @ and www
+LITERAL_OUTPUT/RESULT: routes=ip.rulio.sryze.cc,rulio.top,www.rulio.top; rulio.top Tunnel whoami-baota proxied automatic; www.rulio.top Tunnel whoami-baota proxied automatic; HTTPS rulio.top=200; HTTPS www.rulio.top=200
+EXIT_STATUS: 0
 
 DEPLOY
-COMMAND: docker build --provenance=false -t whoami-whoami:radar-b78cdfa -t whoami-whoami:latest .; docker save -o D:\Codex\IP\.deploy-whoami-radar-b78cdfa.tar whoami-whoami:latest whoami-whoami:radar-b78cdfa; git archive --format=tar.gz --output=D:\Codex\IP\.deploy-whoami-radar-b78cdfa-source.tar.gz b78cdfa4244682daac3b8757c5d3bdd1af6c3db6; scp -P 39723 artifacts root@82.156.156.65:/root/; ssh -p 39723 root@82.156.156.65 'docker load; atomic source replacement preserving .env and databases; docker compose up -d --no-build --pull never'
-INPUT: source commit b78cdfa4244682daac3b8757c5d3bdd1af6c3db6; image archive SHA256=41DE727A47F2FDE0380FD50824ACB103C8E0152D782036D5711D21509985C0DC; source archive SHA256=19531354CA247D23DDB06309EFB8B586B069252E147D4E6D36E51F8B73070695; Radar token transferred without printing its value; source backup /www/backups/whoami-before-radar-20260905-b78cdfa.tar.gz; rollback image whoami-whoami:before-radar-20260905-b78cdfa
-LITERAL_OUTPUT/RESULT: Loaded image: whoami-whoami:latest; Loaded image: whoami-whoami:radar-b78cdfa; DEPLOYED_IMAGE=sha256:c985ad22b6e338538bccdf95083a721d9b881a2136529eeb94e9fc1aed3b3d5e; RADAR_TOKEN_PRESENT=yes; HEALTH_STATUS=healthy; HEALTHZ={"status":"ok","database":"MaxMind GeoLite2 City + ASN"}; whoami-whoami-1 Up (healthy); whoami-cloudflared-1 Up
-EXIT_STATUS: 0
+STATUS: PENDING
 
 PUBLIC
-COMMAND: CDP open https://ip.rulio.sryze.cc/; evaluate DOM, /api/purity and responsive overflow; CDP open https://github.com/Rulio723/whoami-ip-purity; evaluate README markers
-INPUT: production site through Cloudflare Tunnel/CDN; default privacy setting; GitHub main after git push github HEAD:main
-LITERAL_OUTPUT/RESULT: title=我是谁？; privacy=false; traffic="ASN 人机流量比 | Cloudflare Radar · AS1054 · 最近7天 | human 56.90% | bot 43.10%"; API={"riskScore":46,"purityScore":54,"humanTraffic":56.898443,"botTraffic":43.101557,"trafficAvailable":true,"trafficSource":"Cloudflare Radar","trafficScope":"AS1054 · 最近7天","independent":true}; overflow=0; GitHub hasRadar=true hasEnv=true hasStructure=true commitLink=true
-EXIT_STATUS: 0
-FINAL_STATUS: Cloudflare Radar ASN traffic data is live and independent from current-IP purity; privacy remains disabled by default; desktop/mobile layout has zero horizontal overflow.
+STATUS: PENDING

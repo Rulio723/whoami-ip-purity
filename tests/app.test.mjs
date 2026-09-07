@@ -50,6 +50,9 @@ test('browser HTML is rendered from MaxMind City and ASN records', async () => {
     });
     const html = await response.text();
     assert.match(html, /216\.40\.85\.151/);
+    assert.match(html, /curl rulio\.top/);
+    assert.match(html, /property="og:url" content="https:\/\/rulio\.top\/"/);
+    assert.doesNotMatch(html, /curl ip\.rulio\.sryze\.cc/);
     assert.match(html, /洛杉矶/);
     assert.match(html, /90060/);
     assert.match(html, /216\.40\.84\.0\/22/);

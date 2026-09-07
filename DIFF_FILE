@@ -1,487 +1,97 @@
-diff --git a/.env.example b/.env.example
-index af2fdef..3e2c9d8 100644
---- a/.env.example
-+++ b/.env.example
-@@ -1,6 +1,7 @@
- PORT=3000
- HOST=0.0.0.0
- TRUST_CF_CONNECTING_IP=true
-+CLOUDFLARE_RADAR_API_TOKEN=
- DEV_IP_OVERRIDE=
- 
- # Optional custom production database files. Leave blank to use the
 diff --git a/README.md b/README.md
-index ee4d5f3..c042244 100644
+index c042244..78e3689 100644
 --- a/README.md
 +++ b/README.md
-@@ -27,7 +27,7 @@ WhoAmI Pure 是一个可自行部署的 IP 信息检测站。浏览器访问时
+@@ -5,7 +5,7 @@
+ </p>
  
- 项目由 Cloudflare Tunnel 接收公网请求，通过 `CF-Connecting-IP` 获取真实客户端 IP；Node.js/Express 在服务端查询本地 MaxMind GeoLite2 City 与 ASN 数据库并渲染页面。浏览器端使用 htmx、hx-live 和 FingerprintJS 完成异步 PTR、纯净度与指纹展示。
+ <p align="center">
+-  <a href="https://ip.rulio.sryze.cc">在线演示</a> ·
++  <a href="https://rulio.top">在线演示</a> ·
+   <a href="#快速开始">快速开始</a> ·
+   <a href="#宝塔面板部署">宝塔部署</a> ·
+   <a href="#cloudflare-tunnel-免费部署">Cloudflare Tunnel</a>
+@@ -17,7 +17,7 @@
+ ![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnel-F38020?logo=cloudflare&logoColor=white)
+ ![License](https://img.shields.io/badge/License-MIT-blue.svg)
  
--IP 纯净度由本地 ASN、服务商分类和 PTR 反向 DNS 信号计算，不依赖收费在线接口。人机流量比例是基于相同风险信号生成的**估算值**，不是第三方平台的真实全网流量统计。
-+IP 纯净度由本地 ASN、服务商分类和 PTR 反向 DNS 信号计算。人机流量比例独立读取 Cloudflare Radar 对该 ASN 最近 7 天 HTML 请求的聚合统计，因此它不会与纯净度保持一致。
+-> 在线站点：[https://ip.rulio.sryze.cc](https://ip.rulio.sryze.cc)
++> 在线站点：[https://rulio.top](https://rulio.top) / [https://www.rulio.top](https://www.rulio.top)
  
- ## 功能特色
+ ![WhoAmI Pure 预览](docs/preview.png)
  
-@@ -37,7 +37,7 @@ IP 纯净度由本地 ASN、服务商分类和 PTR 反向 DNS 信号计算，不
- - **PTR 反向解析**：异步查询主机名，内置超时保护，不阻塞首屏。
- - **IP 纯净度**：输出 0–100 风险系数、纯净度、风险等级和解释因子。
- - **网络属性识别**：住宅/运营商、商业网络、机房/云服务及匿名代理。
--- **人机流量比**：绿色 `human` 与红色 `bot` 比例条，保留两位小数。
-+- **ASN 人机流量比**：通过 Cloudflare Radar 获取最近 7 天 `human` 与 `bot` HTML 请求比例，保留两位小数。
- - **浏览器指纹**：FingerprintJS visitor ID、浏览器、系统、设备和时区。
- - **IP 来源与属性**：根据 ASN、服务商与 PTR 信号标注原生／广播 IP 及住宅／机房／代理属性。
- - **分类颜色**：原生／住宅为绿色，广播／商业宽带为黄色，机房为橙色，匿名代理为红色，未知为灰色。
-@@ -138,6 +138,7 @@ cp .env.example .env
- | `TRUST_CF_CONNECTING_IP` | `true` | 是否信任 Cloudflare 真实 IP 请求头 |
- | `DEV_IP_OVERRIDE` | 空 | 开发环境固定查询 IP |
- | `CLOUDFLARE_TUNNEL_TOKEN` | 空 | Cloudflare Tunnel 令牌 |
-+| `CLOUDFLARE_RADAR_API_TOKEN` | 空 | Cloudflare Radar 只读令牌，用于获取 ASN 最近 7 天人机流量比例 |
- | `MAXMIND_CITY_DB` | 内置数据库 | 自定义 City MMDB 路径 |
- | `MAXMIND_ASN_DB` | 内置数据库 | 自定义 ASN MMDB 路径 |
- 
-@@ -149,6 +150,7 @@ cp .env.example .env
- 
- ```dotenv
- CLOUDFLARE_TUNNEL_TOKEN=替换为你的Tunnel令牌
-+CLOUDFLARE_RADAR_API_TOKEN=替换为你的Radar只读令牌
- MAXMIND_CITY_DB=
- MAXMIND_ASN_DB=
- ```
-@@ -218,6 +220,7 @@ nano .env
- 
- ```dotenv
- CLOUDFLARE_TUNNEL_TOKEN=你的CloudflareTunnel令牌
-+CLOUDFLARE_RADAR_API_TOKEN=你的Radar只读令牌
- ```
- 
- 限制权限：
-@@ -300,6 +303,7 @@ cp .env.example .env
- 
- ```dotenv
- CLOUDFLARE_TUNNEL_TOKEN=粘贴完整Token
-+CLOUDFLARE_RADAR_API_TOKEN=粘贴Radar只读Token
- ```
- 
- ### 4. 启动 Tunnel
-@@ -367,8 +371,11 @@ curl https://ip.example.com
-   "ip": "216.40.85.151",
-   "riskScore": 46,
-   "purityScore": 54,
--  "humanTraffic": 54,
--  "botTraffic": 46,
-+  "humanTraffic": 52.54,
-+  "botTraffic": 47.46,
-+  "trafficAvailable": true,
-+  "trafficSource": "Cloudflare Radar",
-+  "trafficScope": "AS1054 · 最近7天",
-   "level": "轻度风险",
-   "networkType": "机房 / 云服务",
-   "confidence": "高",
-@@ -415,7 +422,15 @@ curl https://ip.example.com
- - PTR 主机名中的动态地址池、服务器和匿名网络特征
- - ASN 和注册国家信息是否完整
- 
--`humanTraffic + botTraffic = 100`。当前人机比例从风险系数推导并在页面中标注为估算值，不应当作为广告结算、反欺诈封禁或司法判断的唯一依据。
-+`humanTraffic + botTraffic = 100`。这组数据来自 Cloudflare Radar 的 ASN 级聚合结果，不是当前单个 IP 的流量统计；纯净度则是当前 IP 的本地启发式评分。两者数据源、对象和含义均不同，不应相等，也不应作为广告结算、反欺诈封禁或司法判断的唯一依据。
-+
-+使用人机流量比需要在 `.env` 配置只读 Radar Token：
-+
-+```dotenv
-+CLOUDFLARE_RADAR_API_TOKEN=你的_Radar_Read_Token
-+```
-+
-+未配置 Token、ASN 缺失或 Cloudflare Radar 暂无该 ASN 数据时，页面显示“暂无该 ASN 的 Cloudflare Radar 人机流量数据”，不会再使用纯净度伪造比例。
- 
- ## MaxMind 数据库更新
- 
-@@ -469,7 +484,8 @@ src/app.js           Express 路由和响应头
- src/ip.js            真实 IP 与 User-Agent 解析
- src/hostname.js      有超时保护的 PTR 查询
- src/maxmind.js       MaxMind MMDB 加载和查询
--src/purity.js        IP 纯净度、人机比例和结果缓存
-+src/purity.js        IP 纯净度启发式评分和结果缓存
-+src/radar.js         Cloudflare Radar ASN 人机流量查询和缓存
- src/template.js      服务端 HTML 与纯净度片段
- scripts/build.mjs    Vite 和静态资源构建
- tests/               Node.js 自动化测试
 diff --git a/ROLLBACK.sh b/ROLLBACK.sh
-index c91ea73..fb2df00 100755
+index fb2df00..25f945b 100755
 --- a/ROLLBACK.sh
 +++ b/ROLLBACK.sh
-@@ -1,20 +1,35 @@
+@@ -1,35 +1,28 @@
  #!/usr/bin/env bash
  set -euo pipefail
  
--BASELINE_COMMIT="5fc6c27ac69e020823fd6bb0f5b07dae8c41eb91"
-+BASELINE_COMMIT="f761ad9fecbf5be2add99837bd1fcb17f32e63e4"
+-BASELINE_COMMIT="f761ad9fecbf5be2add99837bd1fcb17f32e63e4"
++BASELINE_COMMIT="c8ac29d21b621755e30b31a5c748c218fe95be99"
  ROOT="${1:-$(pwd)}"
  cd "$ROOT"
  
  git cat-file -e "${BASELINE_COMMIT}^{commit}"
  git restore --source="$BASELINE_COMMIT" -- \
-+  .env.example \
+-  .env.example \
    README.md \
-   assets/main.css \
--  client.js \
--  docs/preview.png \
-+  compose.yaml \
-+  src/app.js \
-   src/purity.js \
+-  assets/main.css \
+-  compose.yaml \
+-  src/app.js \
+-  src/purity.js \
    src/template.js \
-   tests/app.test.mjs \
-   tests/purity.test.mjs
+-  tests/app.test.mjs \
+-  tests/purity.test.mjs
+-
+-rm -f -- src/radar.js tests/radar.test.mjs
++  tests/app.test.mjs
  
-+rm -f -- src/radar.js tests/radar.test.mjs
-+
  npm test
--printf 'ROLLBACK_OK baseline=%s semantic_colors=absent single_pink_badge=restored\n' "$BASELINE_COMMIT"
-+node --input-type=module - <<'NODE'
-+import { analyzeIpPurity } from './src/purity.js';
-+
-+const restored = analyzeIpPurity({
-+  ip: '103.100.111.235',
-+  geo: { asn: 32043, provider: 'China Unicom', countryCode: 'CN' }
-+});
-+if (restored.humanTraffic !== restored.purityScore || restored.botTraffic !== restored.riskScore) {
-+  throw new Error('rollback semantic verification failed');
-+}
-+console.log(`RESTORED_BEHAVIOR humanTraffic=${restored.humanTraffic} purityScore=${restored.purityScore} botTraffic=${restored.botTraffic} riskScore=${restored.riskScore}`);
-+NODE
-+printf 'ROLLBACK_OK baseline=%s traffic_mix=derived_from_purity restored_behavior=humanTraffic_equals_purityScore\n' "$BASELINE_COMMIT"
-diff --git a/assets/main.css b/assets/main.css
-index f8cf90a..910a454 100644
---- a/assets/main.css
-+++ b/assets/main.css
-@@ -29,6 +29,7 @@
- .traffic-legend{display:flex;justify-content:space-between;margin-top:.35rem;font-family:var(--font-mono);font-size:.75rem}
- .traffic-legend span:first-child{color:#16a36a}
- .traffic-legend span:last-child{color:#f43f68}
-+.traffic-unavailable{padding:.7rem;border-radius:.65rem;background:#fdf2f8;color:#861043bf;font-size:.75rem;text-align:center}
- .ip-classification-badge{display:inline-flex;align-items:center;border-radius:.55rem;padding:.2rem .65rem;font-family:var(--font-sans);font-size:.78rem;font-weight:700;line-height:1.25}
- .ip-classification-badge--green{background:#22c55e;color:#052e16}
- .ip-classification-badge--yellow{background:#facc15;color:#422006}
-diff --git a/compose.yaml b/compose.yaml
-index bce730e..9abbe03 100644
---- a/compose.yaml
-+++ b/compose.yaml
-@@ -6,6 +6,7 @@ services:
-       PORT: 3000
-       HOST: 0.0.0.0
-       TRUST_CF_CONNECTING_IP: "true"
-+      CLOUDFLARE_RADAR_API_TOKEN: ${CLOUDFLARE_RADAR_API_TOKEN:-}
-       MAXMIND_CITY_DB: ${MAXMIND_CITY_DB:-}
-       MAXMIND_ASN_DB: ${MAXMIND_ASN_DB:-}
-     ports:
-diff --git a/src/app.js b/src/app.js
-index 39ddffe..1058f41 100644
---- a/src/app.js
-+++ b/src/app.js
-@@ -4,14 +4,16 @@ import express from 'express';
- import { lookupHostname } from './hostname.js';
- import { detectClient, getClientIp } from './ip.js';
- import { createPurityService } from './purity.js';
-+import { createRadarService } from './radar.js';
- import { renderPage, renderPurityPanel } from './template.js';
+ node --input-type=module - <<'NODE'
+-import { analyzeIpPurity } from './src/purity.js';
++import { renderPage } from './src/template.js';
  
- const root = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
- 
--export function createApp({ geoService, trustCloudflare = true, ipOverride = '', hostnameLookup = lookupHostname } = {}) {
-+export function createApp({ geoService, trustCloudflare = true, ipOverride = '', hostnameLookup = lookupHostname, radarService } = {}) {
-   if (!geoService) throw new Error('geoService is required');
-   const app = express();
-   const purityService = createPurityService({ hostnameLookup });
-+  const trafficService = radarService || createRadarService({ apiToken: process.env.CLOUDFLARE_RADAR_API_TOKEN || '' });
-   app.disable('x-powered-by');
-   app.set('trust proxy', 1);
- 
-@@ -50,17 +52,23 @@ export function createApp({ geoService, trustCloudflare = true, ipOverride = '',
-   app.get('/api/purity', async (request, response) => {
-     const ip = ipOverride || getClientIp(request, { trustCloudflare });
-     const geo = geoService.lookup(ip);
--    const purity = await purityService.lookup(ip, geo);
-+    const [purity, traffic] = await Promise.all([
-+      purityService.lookup(ip, geo),
-+      trafficService.lookup(geo.asn)
-+    ]);
-     response.set('Cache-Control', 'private, no-store');
--    response.json({ ...purity, checkedAt: new Date().toISOString() });
-+    response.json({ ...purity, ...traffic, checkedAt: new Date().toISOString() });
-   });
- 
-   app.get('/purity', async (request, response) => {
-     const ip = ipOverride || getClientIp(request, { trustCloudflare });
-     const geo = geoService.lookup(ip);
--    const purity = await purityService.lookup(ip, geo);
-+    const [purity, traffic] = await Promise.all([
-+      purityService.lookup(ip, geo),
-+      trafficService.lookup(geo.asn)
-+    ]);
-     response.set('Cache-Control', 'private, no-store');
--    response.type('html').send(renderPurityPanel(purity));
-+    response.type('html').send(renderPurityPanel({ ...purity, ...traffic }));
-   });
- 
-   app.get('/', (request, response) => {
-diff --git a/src/purity.js b/src/purity.js
-index 5becd48..e9b4795 100644
---- a/src/purity.js
-+++ b/src/purity.js
-@@ -47,7 +47,7 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
-     return {
-       ip: ip || '', riskScore: 100, purityScore: 0, level: '无法评估', levelKey: 'unknown',
-       summary: 'IP 地址格式无效', networkType: '未知', confidence: '低', hostname: '',
--      ipSource: '未知', ipAttribute: '未知', humanTraffic: 0, botTraffic: 100, factors: []
-+      ipSource: '未知', ipAttribute: '未知', factors: []
-     };
-   }
- 
-@@ -112,8 +112,6 @@ export function analyzeIpPurity({ ip, geo = {}, hostname = '' } = {}) {
-     ip,
-     riskScore: score,
-     purityScore: 100 - score,
--    humanTraffic: Number((100 - score).toFixed(2)),
--    botTraffic: Number(score.toFixed(2)),
-     level: classification.label,
-     levelKey: classification.key,
-     summary: classification.summary,
-diff --git a/src/radar.js b/src/radar.js
-new file mode 100644
-index 0000000..71dd48e
---- /dev/null
-+++ b/src/radar.js
-@@ -0,0 +1,71 @@
-+const RADAR_ENDPOINT = 'https://api.cloudflare.com/client/v4/radar/http/summary/BOT_CLASS';
-+
-+function unavailable(reason, asn) {
-+  return {
-+    humanTraffic: null,
-+    botTraffic: null,
-+    trafficAvailable: false,
-+    trafficSource: 'Cloudflare Radar',
-+    trafficScope: asn ? `AS${asn} · 最近7天` : 'ASN · 最近7天',
-+    trafficUpdatedAt: null,
-+    trafficReason: reason
-+  };
-+}
-+
-+export function createRadarService({
-+  apiToken = '',
-+  fetchImpl = globalThis.fetch,
-+  ttlMs = 15 * 60 * 1000,
-+  timeoutMs = 5000
-+} = {}) {
-+  const cache = new Map();
-+
-+  return {
-+    async lookup(asn) {
-+      const normalizedAsn = Number(asn) || null;
-+      if (!normalizedAsn) return unavailable('缺少 ASN', normalizedAsn);
-+      if (!apiToken) return unavailable('未配置 Cloudflare Radar API Token', normalizedAsn);
-+
-+      const now = Date.now();
-+      const cached = cache.get(normalizedAsn);
-+      if (cached && cached.expiresAt > now) return cached.value;
-+
-+      const value = (async () => {
-+        try {
-+          const url = new URL(RADAR_ENDPOINT);
-+          url.searchParams.set('asn', String(normalizedAsn));
-+          url.searchParams.set('dateRange', '7d');
-+          url.searchParams.set('format', 'json');
-+          const response = await fetchImpl(url, {
-+            headers: { Authorization: `Bearer ${apiToken}` },
-+            signal: AbortSignal.timeout(timeoutMs)
-+          });
-+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-+
-+          const payload = await response.json();
-+          const summary = payload?.result?.summary_0;
-+          const humanTraffic = Number(summary?.human);
-+          const botTraffic = Number(summary?.bot);
-+          if (!payload?.success || !Number.isFinite(humanTraffic) || !Number.isFinite(botTraffic)) {
-+            throw new Error('Radar 响应缺少人机流量数据');
-+          }
-+
-+          return {
-+            humanTraffic,
-+            botTraffic,
-+            trafficAvailable: true,
-+            trafficSource: 'Cloudflare Radar',
-+            trafficScope: `AS${normalizedAsn} · 最近7天`,
-+            trafficUpdatedAt: payload.result.meta?.lastUpdated || null,
-+            trafficReason: ''
-+          };
-+        } catch (error) {
-+          return unavailable(error instanceof Error ? error.message : 'Radar 查询失败', normalizedAsn);
-+        }
-+      })();
-+
-+      cache.set(normalizedAsn, { expiresAt: now + ttlMs, value });
-+      return value;
-+    }
-+  };
-+}
+-const restored = analyzeIpPurity({
++const html = renderPage({
+   ip: '103.100.111.235',
+-  geo: { asn: 32043, provider: 'China Unicom', countryCode: 'CN' }
++  geo: {},
++  client: { browser: 'Chrome', os: 'Windows', device: 'Desktop' }
+ });
+-if (restored.humanTraffic !== restored.purityScore || restored.botTraffic !== restored.riskScore) {
+-  throw new Error('rollback semantic verification failed');
++if (!html.includes('curl ip.rulio.sryze.cc') || html.includes('curl rulio.top')) {
++  throw new Error('rollback domain verification failed');
+ }
+-console.log(`RESTORED_BEHAVIOR humanTraffic=${restored.humanTraffic} purityScore=${restored.purityScore} botTraffic=${restored.botTraffic} riskScore=${restored.riskScore}`);
++console.log('RESTORED_BEHAVIOR footer="curl ip.rulio.sryze.cc" ogUrl="https://ip.rulio.sryze.cc/"');
+ NODE
+-printf 'ROLLBACK_OK baseline=%s traffic_mix=derived_from_purity restored_behavior=humanTraffic_equals_purityScore\n' "$BASELINE_COMMIT"
++printf 'ROLLBACK_OK baseline=%s primary_domain=ip.rulio.sryze.cc restored\n' "$BASELINE_COMMIT"
 diff --git a/src/template.js b/src/template.js
-index 4b13560..f9fde7a 100644
+index f9fde7a..ff8dce2 100644
 --- a/src/template.js
 +++ b/src/template.js
-@@ -33,13 +33,23 @@ function tab(iconClass, title, extra = '') {
-   return `<div class="flex items-center justify-between gap-3"><h2 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="iconify size-4 ${iconClass}" aria-hidden="true"></span> ${escapeHtml(title)}</h2>${extra}</div>`;
+@@ -62,5 +62,5 @@ export function renderPage({ ip, geo, client }) {
+     ? row('设备', 'Bot', false, true)
+     : `${row('浏览器', client.browser, false, true)}${row('操作系统', client.os, false, true)}${row('设备', client.device, false, true)}`;
+ 
+-  return `<!doctype html><html lang="zh-Hans" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>我是谁？</title><link rel="preload" as="font" type="font/woff2" href="/assets/TwemojiCountryFlags-Bymva2JV.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-400-normal-WIx2rg0p.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-italic-D7QxTey4.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-normal-B_sC0Ion.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-400-normal-Crq_kbPk.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-700-normal-BeFL_mDB.woff2" crossorigin="anonymous"><link rel="stylesheet" href="${browserAssets.css}"><script type="module" src="${browserAssets.client}"></script><link rel="modulepreload" href="${browserAssets.client}"><link rel="dns-prefetch" href="https://track.ecchi.cx"><meta name="description" content="可爱的 IP 地址、纯净度与浏览器指纹检测工具。"><meta name="color-scheme" content="light"><meta name="theme-color" content="#fda5d5"><meta property="og:type" content="website"><meta property="og:url" content="https://ip.rulio.sryze.cc/"><meta property="og:title" content="Who am I?"><meta property="og:description" content="A cute IP address lookup."><meta property="og:image" content="https://ip.rulio.sryze.cc/og.png?v=047a2f6"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/logo.svg" type="image/svg+xml"><noscript><style>[data-pending]{display:none}</style></noscript></head><body class="min-h-dvh bg-pink-100 font-sans text-pink-950"><main class="mx-auto flex min-h-dvh w-fit min-w-[min(36rem,100%)] max-w-full flex-col justify-center px-4 py-8"><div class="relative -mb-3 flex flex-wrap items-center justify-between gap-2 px-6 sm:px-8"><h1 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="size-4 bg-current mask-[url(/logo.svg)] mask-contain mask-center mask-no-repeat" aria-hidden="true"></span> 我是谁？</h1><button class="privacy-toggle" type="button" data-privacy-toggle aria-pressed="false"><span aria-hidden="true">◉</span><span data-privacy-label>隐藏隐私</span></button></div><article class="rounded-2xl border-2 border-black bg-white shadow-cap"><header class="flex flex-col gap-4 px-6 pb-7 pt-10 sm:px-8"><p dir="ltr" role="group" aria-label="IPv4" class="break-words text-center font-mono font-bold tracking-tight text-3xl sm:text-4xl" data-private>${escapeHtml(ip)}</p><p dir="ltr" class="@container break-words text-center font-mono text-sm font-bold text-pink-900/75 empty:hidden" data-private data-pending="" hx-get="/hostname" hx-swap="textContent" hx-trigger="load"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span></p></header><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--location-line', '位置', '<div class="translate-y-0.5"><a class="text-xs text-pink-900/75 hover:underline" href="https://www.maxmind.com" target="_blank">MaxMind</a></div>')}<dl class="mt-5 space-y-2.5">${row('城市', mapValue, true, true)}${row('邮政编码', geo.postalCode, false, true)}${row('地区', geo.region, false, true)}${row('国家', countryText, false, true)}${row('时区', `<span class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" data-timezone="${escapeHtml(geo.timezone)}">${escapeHtml(geo.timezone)}</span>`, true, true)}${row('网络', geo.network, false, true)}${row('ASN', asn, false, true)}${row('服务商', geo.provider, false, true)}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--send-plane-line', '请求')}<dl class="mt-5 space-y-2.5">${requestRows}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--shield-check-line', 'IP 纯净度')}<div class="mt-5" id="purity" data-pending="" hx-get="/purity" hx-trigger="load" hx-swap="innerHTML"><div class="purity-loading"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span><span>正在综合 ASN 与反向 DNS 信号…</span></div></div></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8" data-fingerprint="" data-pending="" data-timezone="" id="browser">${tab('mingcute--web-line', '浏览器')}<dl class="mt-5 space-y-2.5">${row('指纹', '<span data-fingerprint-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[8ch] sm:w-[32ch]" aria-hidden="true" :hidden="!!data.fingerprint"></span> <span data-fingerprint-short class="sm:hidden" :text="data.fingerprint?.slice(0, 8)"></span> <span data-fingerprint-full class="hidden sm:inline" :text="data.fingerprint"></span>', true, true)}${row('时区', '<span data-timezone-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[13ch]" aria-hidden="true" :hidden="!!data.timezone"></span> <span data-timezone-value class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" :text="data.timezone"></span>', true, true)}</dl></section><footer class="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 border-t-2 border-dashed border-pink-200 px-6 py-6 text-center text-pink-900/75 sm:justify-between sm:px-8 sm:text-start"><p class="font-mono text-xs"><span aria-hidden="true" class="select-none">$ </span><span class="select-all">curl ip.rulio.sryze.cc</span></p><p class="text-xs">你的 IP 地址不会被保存。</p></footer></article></main></body></html>`;
++  return `<!doctype html><html lang="zh-Hans" dir="ltr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>我是谁？</title><link rel="preload" as="font" type="font/woff2" href="/assets/TwemojiCountryFlags-Bymva2JV.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-400-normal-WIx2rg0p.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-italic-D7QxTey4.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/maple-mono-latin-700-normal-B_sC0Ion.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-400-normal-Crq_kbPk.woff2" crossorigin="anonymous"><link rel="preload" as="font" type="font/woff2" href="/assets/open-runde-latin-700-normal-BeFL_mDB.woff2" crossorigin="anonymous"><link rel="stylesheet" href="${browserAssets.css}"><script type="module" src="${browserAssets.client}"></script><link rel="modulepreload" href="${browserAssets.client}"><link rel="dns-prefetch" href="https://track.ecchi.cx"><meta name="description" content="可爱的 IP 地址、纯净度与浏览器指纹检测工具。"><meta name="color-scheme" content="light"><meta name="theme-color" content="#fda5d5"><meta property="og:type" content="website"><meta property="og:url" content="https://rulio.top/"><meta property="og:title" content="Who am I?"><meta property="og:description" content="A cute IP address lookup."><meta property="og:image" content="https://rulio.top/og.png?v=047a2f6"><meta name="twitter:card" content="summary_large_image"><link rel="icon" href="/logo.svg" type="image/svg+xml"><noscript><style>[data-pending]{display:none}</style></noscript></head><body class="min-h-dvh bg-pink-100 font-sans text-pink-950"><main class="mx-auto flex min-h-dvh w-fit min-w-[min(36rem,100%)] max-w-full flex-col justify-center px-4 py-8"><div class="relative -mb-3 flex flex-wrap items-center justify-between gap-2 px-6 sm:px-8"><h1 class="flex items-center gap-1.5 rounded-xl border-2 border-black bg-pink-300 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest shadow-tab"><span class="size-4 bg-current mask-[url(/logo.svg)] mask-contain mask-center mask-no-repeat" aria-hidden="true"></span> 我是谁？</h1><button class="privacy-toggle" type="button" data-privacy-toggle aria-pressed="false"><span aria-hidden="true">◉</span><span data-privacy-label>隐藏隐私</span></button></div><article class="rounded-2xl border-2 border-black bg-white shadow-cap"><header class="flex flex-col gap-4 px-6 pb-7 pt-10 sm:px-8"><p dir="ltr" role="group" aria-label="IPv4" class="break-words text-center font-mono font-bold tracking-tight text-3xl sm:text-4xl" data-private>${escapeHtml(ip)}</p><p dir="ltr" class="@container break-words text-center font-mono text-sm font-bold text-pink-900/75 empty:hidden" data-private data-pending="" hx-get="/hostname" hx-swap="textContent" hx-trigger="load"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span></p></header><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--location-line', '位置', '<div class="translate-y-0.5"><a class="text-xs text-pink-900/75 hover:underline" href="https://www.maxmind.com" target="_blank">MaxMind</a></div>')}<dl class="mt-5 space-y-2.5">${row('城市', mapValue, true, true)}${row('邮政编码', geo.postalCode, false, true)}${row('地区', geo.region, false, true)}${row('国家', countryText, false, true)}${row('时区', `<span class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" data-timezone="${escapeHtml(geo.timezone)}">${escapeHtml(geo.timezone)}</span>`, true, true)}${row('网络', geo.network, false, true)}${row('ASN', asn, false, true)}${row('服务商', geo.provider, false, true)}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--send-plane-line', '请求')}<dl class="mt-5 space-y-2.5">${requestRows}</dl></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8">${tab('mingcute--shield-check-line', 'IP 纯净度')}<div class="mt-5" id="purity" data-pending="" hx-get="/purity" hx-trigger="load" hx-swap="innerHTML"><div class="purity-loading"><span class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[24ch]" aria-hidden="true"></span><span>正在综合 ASN 与反向 DNS 信号…</span></div></div></section><section class="@container border-t-2 border-dashed border-pink-200 px-6 py-6 sm:px-8" data-fingerprint="" data-pending="" data-timezone="" id="browser">${tab('mingcute--web-line', '浏览器')}<dl class="mt-5 space-y-2.5">${row('指纹', '<span data-fingerprint-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[8ch] sm:w-[32ch]" aria-hidden="true" :hidden="!!data.fingerprint"></span> <span data-fingerprint-short class="sm:hidden" :text="data.fingerprint?.slice(0, 8)"></span> <span data-fingerprint-full class="hidden sm:inline" :text="data.fingerprint"></span>', true, true)}${row('时区', '<span data-timezone-spinner class="inline-block h-[1em] rounded-full bg-pink-100 align-middle motion-safe:animate-pulse w-[13ch]" aria-hidden="true" :hidden="!!data.timezone"></span> <span data-timezone-value class="cursor-help underline decoration-pink-400 decoration-dashed underline-offset-2" hx-on:mouseenter="attr.title = zoneTime(data.timezone)" :text="data.timezone"></span>', true, true)}</dl></section><footer class="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-1 border-t-2 border-dashed border-pink-200 px-6 py-6 text-center text-pink-900/75 sm:justify-between sm:px-8 sm:text-start"><p class="font-mono text-xs"><span aria-hidden="true" class="select-none">$ </span><span class="select-all">curl rulio.top</span></p><p class="text-xs">你的 IP 地址不会被保存。</p></footer></article></main></body></html>`;
  }
- 
-+function renderTrafficMix(purity) {
-+  if (!purity.trafficAvailable || !Number.isFinite(purity.humanTraffic) || !Number.isFinite(purity.botTraffic)) {
-+    return `<div class="traffic-mix"><div class="traffic-mix-title"><span>ASN 人机流量比</span><small>${escapeHtml(purity.trafficSource || 'Cloudflare Radar')} · 最近7天</small></div><p class="traffic-unavailable">暂无该 ASN 的 Cloudflare Radar 人机流量数据</p></div>`;
-+  }
-+
-+  const human = purity.humanTraffic.toFixed(2);
-+  const bot = purity.botTraffic.toFixed(2);
-+  return `<div class="traffic-mix"><div class="traffic-mix-title"><span>ASN 人机流量比</span><small>${escapeHtml(purity.trafficSource)} · ${escapeHtml(purity.trafficScope)}</small></div><progress class="traffic-progress" max="100" value="${escapeHtml(purity.humanTraffic)}" aria-label="Cloudflare Radar 统计：人类流量 ${escapeHtml(human)}%，机器人流量 ${escapeHtml(bot)}%"></progress><div class="traffic-legend"><span>human ${escapeHtml(human)}%</span><span>bot ${escapeHtml(bot)}%</span></div></div>`;
-+}
-+
- export function renderPurityPanel(purity) {
-   const factorRows = purity.factors
-     .filter(item => item.weight !== 0)
-     .map(item => row(item.label, `${item.value}${item.weight > 0 ? ` (+${item.weight})` : ` (${item.weight})`}`))
-     .join('');
- 
--  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div><div class="traffic-mix"><div class="traffic-mix-title"><span>人机流量比</span><small>根据风险特征估算</small></div><progress class="traffic-progress" max="100" value="${escapeHtml(purity.humanTraffic)}" aria-label="预计人类流量 ${escapeHtml(purity.humanTraffic)}%，机器人流量 ${escapeHtml(purity.botTraffic)}%"></progress><div class="traffic-legend"><span>human ${escapeHtml(purity.humanTraffic.toFixed(2))}%</span><span>bot ${escapeHtml(purity.botTraffic.toFixed(2))}%</span></div></div><dl class="mt-5 space-y-2.5">${row('IP来源', badge(purity.ipSource), true)}${row('IP属性', badge(purity.ipAttribute), true)}${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录', false, true)}${factorRows}</dl><p class="purity-note">IP 来源与属性为 ASN、服务商及 PTR 信号的启发式判断；应用不会保存你的 IP。</p></div>`;
-+  return `<div class="purity-result purity-${escapeHtml(purity.levelKey)}"><div class="purity-heading"><div><p class="purity-score"><strong>${escapeHtml(purity.riskScore)}</strong><span>/100</span></p><p class="purity-caption">风险系数</p></div><div class="purity-verdict"><strong>${escapeHtml(purity.level)}</strong><span>${escapeHtml(purity.summary)}</span></div></div><progress class="purity-progress" max="100" value="${escapeHtml(purity.riskScore)}" aria-label="IP 风险系数 ${escapeHtml(purity.riskScore)} 分"></progress><div class="purity-scale" aria-hidden="true"><span>0</span><span>25</span><span>50</span><span>70</span><span>100</span></div>${renderTrafficMix(purity)}<dl class="mt-5 space-y-2.5">${row('IP来源', badge(purity.ipSource), true)}${row('IP属性', badge(purity.ipAttribute), true)}${row('纯净度', `${purity.purityScore}%`)}${row('网络属性', purity.networkType)}${row('判断置信度', purity.confidence)}${row('PTR', purity.hostname || '无记录', false, true)}${factorRows}</dl><p class="purity-note">纯净度是当前 IP 的启发式评分；人机流量比是 Cloudflare Radar 对该 ASN 近 7 天 HTML 请求的独立统计。两者含义不同，不应相等。应用不会保存你的 IP。</p></div>`;
- }
- 
- export function renderPage({ ip, geo, client }) {
 diff --git a/tests/app.test.mjs b/tests/app.test.mjs
-index b4073bc..c6b1ae4 100644
+index c6b1ae4..42fbdea 100644
 --- a/tests/app.test.mjs
 +++ b/tests/app.test.mjs
-@@ -7,7 +7,18 @@ import { renderPurityPanel } from '../src/template.js';
- 
- async function withServer(run) {
-   const geoService = await createMaxMindService();
--  const server = createApp({ geoService, hostnameLookup: async () => '' }).listen(0, '127.0.0.1');
-+  const radarService = {
-+    lookup: async asn => ({
-+      humanTraffic: 52.54,
-+      botTraffic: 47.46,
-+      trafficAvailable: true,
-+      trafficSource: 'Cloudflare Radar',
-+      trafficScope: `AS${asn} · 最近7天`,
-+      trafficUpdatedAt: '2026-09-05T06:30:00Z',
-+      trafficReason: ''
-+    })
-+  };
-+  const server = createApp({ geoService, hostnameLookup: async () => '', radarService }).listen(0, '127.0.0.1');
-   await once(server, 'listening');
-   const { port } = server.address();
-   try {
-@@ -81,8 +92,10 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
-     assert.equal(purity.networkType, '机房 / 云服务');
-     assert.equal(purity.ipSource, '广播IP');
-     assert.equal(purity.ipAttribute, '机房IP');
--    assert.equal(purity.humanTraffic, 54);
--    assert.equal(purity.botTraffic, 46);
-+    assert.equal(purity.humanTraffic, 52.54);
-+    assert.equal(purity.botTraffic, 47.46);
-+    assert.equal(purity.trafficSource, 'Cloudflare Radar');
-+    assert.equal(purity.trafficScope, 'AS1054 · 最近7天');
- 
-     const purityFragment = await fetch(`${origin}/purity`, {
-       headers: { 'CF-Connecting-IP': '216.40.85.151' }
-@@ -90,9 +103,10 @@ test('JSON API and health endpoint report MaxMind-backed state', async () => {
-     assert.match(purityFragment, /风险系数/);
-     assert.match(purityFragment, /轻度风险/);
-     assert.match(purityFragment, /纯净度/);
--    assert.match(purityFragment, /人机流量比/);
--    assert.match(purityFragment, /human 54\.00%/);
--    assert.match(purityFragment, /bot 46\.00%/);
-+    assert.match(purityFragment, /ASN 人机流量比/);
-+    assert.match(purityFragment, /Cloudflare Radar/);
-+    assert.match(purityFragment, /human 52\.54%/);
-+    assert.match(purityFragment, /bot 47\.46%/);
-     assert.match(purityFragment, /IP来源/);
-     assert.match(purityFragment, /IP属性/);
-     assert.match(purityFragment, /广播IP/);
-diff --git a/tests/purity.test.mjs b/tests/purity.test.mjs
-index 6f61a36..8f2fb4d 100644
---- a/tests/purity.test.mjs
-+++ b/tests/purity.test.mjs
-@@ -11,8 +11,8 @@ test('known hosting ASN produces the expected light-risk score', () => {
- 
-   assert.equal(result.riskScore, 42);
-   assert.equal(result.purityScore, 58);
--  assert.equal(result.humanTraffic, 58);
--  assert.equal(result.botTraffic, 42);
-+  assert.equal(result.humanTraffic, undefined);
-+  assert.equal(result.botTraffic, undefined);
-   assert.equal(result.level, '轻度风险');
-   assert.equal(result.networkType, '机房 / 云服务');
-   assert.equal(result.ipSource, '广播IP');
-@@ -32,8 +32,6 @@ test('residential and anonymizer signals affect score in opposite directions', (
-   });
- 
-   assert.equal(residential.riskScore, 0);
--  assert.equal(residential.humanTraffic, 100);
--  assert.equal(residential.botTraffic, 0);
-   assert.equal(residential.level, '纯净');
-   assert.equal(residential.ipSource, '原生IP');
-   assert.equal(residential.ipAttribute, '住宅IP');
-diff --git a/tests/radar.test.mjs b/tests/radar.test.mjs
-new file mode 100644
-index 0000000..3926966
---- /dev/null
-+++ b/tests/radar.test.mjs
-@@ -0,0 +1,53 @@
-+import test from 'node:test';
-+import assert from 'node:assert/strict';
-+import { createRadarService } from '../src/radar.js';
-+
-+test('Cloudflare Radar ASN summary remains independent from IP purity', async () => {
-+  let requestedUrl;
-+  let authorization;
-+  const service = createRadarService({
-+    apiToken: 'test-token',
-+    fetchImpl: async (url, options) => {
-+      requestedUrl = url;
-+      authorization = options.headers.Authorization;
-+      return new Response(JSON.stringify({
-+        success: true,
-+        result: {
-+          summary_0: { human: '52.540000', bot: '47.460000' },
-+          meta: { lastUpdated: '2026-09-05T06:30:00Z' }
-+        }
-+      }), { status: 200, headers: { 'content-type': 'application/json' } });
-+    }
-+  });
-+
-+  const result = await service.lookup(32043);
-+  assert.equal(result.humanTraffic, 52.54);
-+  assert.equal(result.botTraffic, 47.46);
-+  assert.equal(result.trafficAvailable, true);
-+  assert.equal(result.trafficScope, 'AS32043 · 最近7天');
-+  assert.equal(requestedUrl.searchParams.get('asn'), '32043');
-+  assert.equal(requestedUrl.searchParams.get('dateRange'), '7d');
-+  assert.equal(authorization, 'Bearer test-token');
-+});
-+
-+test('Radar service caches by ASN and reports unavailable data without a token', async () => {
-+  let calls = 0;
-+  const service = createRadarService({
-+    apiToken: 'test-token',
-+    fetchImpl: async () => {
-+      calls += 1;
-+      return new Response(JSON.stringify({
-+        success: true,
-+        result: { summary_0: { human: '53.32', bot: '46.68' }, meta: {} }
-+      }));
-+    }
-+  });
-+
-+  await Promise.all([service.lookup(32043), service.lookup(32043)]);
-+  assert.equal(calls, 1);
-+
-+  const unavailable = await createRadarService().lookup(32043);
-+  assert.equal(unavailable.trafficAvailable, false);
-+  assert.equal(unavailable.humanTraffic, null);
-+  assert.match(unavailable.trafficReason, /API Token/);
-+});
+@@ -50,6 +50,9 @@ test('browser HTML is rendered from MaxMind City and ASN records', async () => {
+     });
+     const html = await response.text();
+     assert.match(html, /216\.40\.85\.151/);
++    assert.match(html, /curl rulio\.top/);
++    assert.match(html, /property="og:url" content="https:\/\/rulio\.top\/"/);
++    assert.doesNotMatch(html, /curl ip\.rulio\.sryze\.cc/);
+     assert.match(html, /洛杉矶/);
+     assert.match(html, /90060/);
+     assert.match(html, /216\.40\.84\.0\/22/);
