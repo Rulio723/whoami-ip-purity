@@ -1,25 +1,31 @@
+<div align="center">
+
 # WhoAmI Pure
 
-<p align="center">
-  <strong>真实 IP、地理位置、浏览器指纹与 IP 纯净度检测服务</strong>
-</p>
+真实 IP、地理位置、浏览器指纹与 IP 纯净度检测服务
 
-<p align="center">
-  <a href="https://rulio.top">在线演示</a> ·
-  <a href="#快速开始">快速开始</a> ·
-  <a href="#宝塔面板部署">宝塔部署</a> ·
-  <a href="#cloudflare-tunnel-免费部署">Cloudflare Tunnel</a>
-</p>
+[![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933?style=flat-square&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
+[![Express 5](https://img.shields.io/badge/Express-5-000000?style=flat-square&logo=express&logoColor=white)](https://expressjs.com/)
+[![Vite 8](https://img.shields.io/badge/Vite-8-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev/)
+[![htmx 4](https://img.shields.io/badge/htmx-4-3366CC?style=flat-square&logo=htmx&logoColor=white)](https://htmx.org/)
+[![MaxMind GeoLite2](https://img.shields.io/badge/MaxMind-GeoLite2-00AEEF?style=flat-square)](https://dev.maxmind.com/geoip/geolite2-free-geolocation-data)
 
-![Node.js](https://img.shields.io/badge/Node.js-22+-339933?logo=nodedotjs&logoColor=white)
-![Express](https://img.shields.io/badge/Express-5-000000?logo=express)
-![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
-![Cloudflare](https://img.shields.io/badge/Cloudflare-Tunnel-F38020?logo=cloudflare&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
+[![Cloudflare Tunnel](https://img.shields.io/badge/Cloudflare-Tunnel-F38020?style=flat-square&logo=cloudflare&logoColor=white)](#cloudflare-tunnel-免费部署)
+[![Cloudflare Radar](https://img.shields.io/badge/Cloudflare-Radar-F38020?style=flat-square&logo=cloudflare&logoColor=white)](#纯净度计算说明)
+[![Docker Compose](https://img.shields.io/badge/Docker-Compose-2496ED?style=flat-square&logo=docker&logoColor=white)](#docker-compose-部署)
+[![FingerprintJS](https://img.shields.io/badge/FingerprintJS-5.2-FF5C5C?style=flat-square)](https://fingerprint.com/)
+[![Tests](https://img.shields.io/badge/tests-node--test-2ea44f?style=flat-square)](#测试)
+[![License: MIT](https://img.shields.io/github/license/Rulio723/whoami-ip-purity?style=flat-square)](LICENSE)
+
+[在线演示](https://rulio.top) · [快速开始](#快速开始) · [宝塔部署](#宝塔面板部署) · [Cloudflare Tunnel](#cloudflare-tunnel-免费部署)
+
+</div>
 
 > 在线站点：[https://rulio.top](https://rulio.top) / [https://www.rulio.top](https://www.rulio.top)
 
-![WhoAmI Pure 预览](docs/preview.png)
+<p align="center">
+  <img src="docs/preview.png" alt="WhoAmI Pure 预览" width="720">
+</p>
 
 ## 项目简介
 
